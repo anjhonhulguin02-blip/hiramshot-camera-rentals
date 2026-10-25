@@ -1,0 +1,4 @@
+import { database,failure,json,ApiError } from '../../../lib/api';
+import { validateDates } from '../../../lib/rental';
+import { catalog } from '../../../lib/booking';
+export async function GET(request:Request){try{const p=new URL(request.url).searchParams,start=p.get('start'),end=p.get('end'),gear=p.get('gear'),item=(await catalog()).find(g=>g.id===gear&&g.active);if(!item)throw new ApiError(400,'Choose valid equipment.');try{validateDates(start,end);}catch(e){throw new ApiError(400,(e as Error).message);}const blocked=await database().prepare('SELECT COUNT(DISTINCT unit_id) AS count FROM booking_days WHERE unit_id IN (SELECT id FROM units WHERE equipment_id=?) AND day>=? AND day<?').bind(gear,start,end).first<{count:number}>();return json({available:(blocked?.count??0)<item.units,message:'Availability is finalized atomically when the reservation payment is confirmed.'});}catch(e){return failure(e);}}
