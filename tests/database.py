@@ -27,3 +27,17 @@ for sql in ["UPDATE security_events SET action='changed'","DELETE FROM security_
   raise AssertionError('Audit mutation was accepted')
  except sqlite3.IntegrityError: pass
 print('PASS: schema migrations, atomic overlap rollback, and append-only audit triggers')
+import re
+route=(root/'app/api/bookings/[id]/documents/route.ts').read_text(encoding='utf-8-sig')
+query=re.search(r"prepare\('(INSERT INTO kyc_documents.*?)'\)\.bind",route).group(1).replace("\\'", "'")
+con.rollback()
+con.execute("UPDATE bookings SET status='verification' WHERE id='a'")
+args=('doc-1','a','government-id-1','private-1','image/png',100,'now','a')
+con.execute(query,args)
+assert con.execute('SELECT COUNT(*) FROM kyc_documents').fetchone()[0]==1
+con.execute(query,('doc-2',)+args[1:])
+assert con.execute('SELECT id FROM kyc_documents').fetchone()[0]=='doc-1'
+con.execute("UPDATE kyc_documents SET deleted_at='now' WHERE id='doc-1'")
+con.execute(query,('doc-3',)+args[1:])
+assert con.execute('SELECT id,deleted_at FROM kyc_documents').fetchone()==('doc-3',None)
+print('PASS: real upload SQL refuses active-document replacement and permits re-upload after authorized deletion')
