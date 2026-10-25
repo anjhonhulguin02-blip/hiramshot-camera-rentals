@@ -10,3 +10,9 @@
 - Production build: run through Sites workflow before packaging.
 
 Known incomplete configuration and operational checks are in OPERATIONS.md. Do not present this private build as independently certified, fully production-ready, or as having an active auto-purge schedule.
+
+## Rate display correction
+
+Catalog cards now advertise the standard package's 1–2 day rate before dates are selected. Every package's duration tiers appear explicitly, including both DJI Neo 2 packages. Choosing valid dates changes the card's primary rate and highlights the applicable tier. The booking package selector uses the same rate schedule component, and the quote calculation uses the same tier lookup helper.
+Three component-render regression checks verify all default card prices, every package/duration tier, and matching booking amounts. Run: node --experimental-strip-types --import ./tests/render-tsx.mjs --test tests/rate-display.test.mjs.
+Live browser automation was unavailable during this correction; rendered component checks and the production build verify the change without a new browser screenshot.

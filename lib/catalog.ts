@@ -11,6 +11,19 @@ export const INITIAL_CATALOG: Equipment[] = [
   { id: 'neo2', name: 'DJI Neo 2', category: 'Drones', description: 'Take the scenic route. Choose the drone alone or the Fly More Combo.', image: '/assets/neo2.jpg', video: '/assets/neo2.mp4', active: true, units: 1, variants: [{ name: 'Standard', deposit: [1500,1500], tiers: tiers([500,500],[450,450],[350,350]), inclusions: ['Drone unit only; final accessories confirmed before reservation'] }, { name: 'Fly More Combo', deposit: [2000,2000], tiers: tiers([700,700],[600,600],[500,500]), inclusions: ['Drone unit', 'Remote controller', 'Extra batteries', 'Charging accessories and case; final inclusions confirmed before reservation'] }], addons: [addons[0]] },
 ];
 export type Selection = { equipmentId: string; variant: string; addons: string[] };
+export function dailyRateTier(variant: Variant, days: number) {
+  return variant.tiers.find(t => days >= t.minDays && days <= t.maxDays);
+}
+export function rateTierLabel(tier: Tier) {
+  if (tier.maxDays === 30) return `${tier.minDays}+ days`;
+  return tier.minDays === tier.maxDays ? `${tier.minDays} day` : `${tier.minDays}–${tier.maxDays} days`;
+}
+export function peso(value: number) {
+  return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', maximumFractionDigits: 0 }).format(value);
+}
+export function dailyRateText(tier: Tier) {
+  return tier.min === tier.max ? `${peso(tier.max)}/day` : `${peso(tier.min)}–${peso(tier.max)}/day`;
+}
 export function calculateQuote(catalog: Equipment[], items: Selection[], days: number) {
   if (!Number.isInteger(days) || days < 1 || days > 30 || !Array.isArray(items) || items.length < 1 || items.length > 8) throw new Error('Choose 1–8 different units and a rental of 1–30 days.');
   if (new Set(items.map(i => i.equipmentId)).size !== items.length) throw new Error('Each equipment model may be selected once per booking.');
@@ -18,7 +31,7 @@ export function calculateQuote(catalog: Equipment[], items: Selection[], days: n
     const equipment = catalog.find(g => g.id === item.equipmentId && g.active), variant = equipment?.variants.find(v => v.name === item.variant);
     if (!equipment || !variant || !Array.isArray(item.addons) || new Set(item.addons).size !== item.addons.length) throw new Error('Choose valid equipment, packages, and add-ons.');
     const selected = item.addons.map(id => { const a = equipment.addons.find(a => a.id === id); if (!a) throw new Error('An add-on is not available for this unit.'); return a; });
-    const tier = variant.tiers.find(t => days >= t.minDays && days <= t.maxDays);
+    const tier = dailyRateTier(variant, days);
     return { equipmentId: equipment.id, name: equipment.name, category: equipment.category, variant: variant.name, addons: selected, dailyMin: tier?.min ?? null, dailyMax: tier?.max ?? null, addonMin: selected.reduce((n,a) => n+a.min,0)*days, addonMax: selected.reduce((n,a) => n+a.max,0)*days, depositMin: variant.deposit[0], depositMax: variant.deposit[1], inclusions: variant.inclusions };
   });
   const combo = lines.some(l => /^Insta360 /i.test(l.name)) && lines.some(l => l.equipmentId === 'neo2');
