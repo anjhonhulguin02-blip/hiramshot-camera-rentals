@@ -8,7 +8,7 @@ import Wizard from '../app/book/wizard.tsx';
 import {INITIAL_CATALOG} from '../lib/catalog.ts';
 
 const render=(Component,props)=>renderToStaticMarkup(React.createElement(Component,props));
-test('all catalog cards advertise the 1–2 day rate and disclose longer rental tiers',()=>{
+test('compact catalog cards keep the correct rate and provide a View prices dialog trigger',()=>{
  const html=render(Storefront,{user:null});
  const cards=[...html.matchAll(/<article class="gear-card">([\s\S]*?)<\/article>/g)].map(m=>m[1]);
  assert.equal(cards.length,3);
@@ -20,10 +20,12 @@ test('all catalog cards advertise the 1–2 day rate and disclose longer rental 
   assert.ok(primary.includes('Refundable deposit: ₱'+deposit.toLocaleString('en-PH')));
   assert.ok(!primary.includes('From ₱'));
  }
- assert.ok(cards[0].includes('<dt>7+ days</dt><dd>₱450/day</dd>'));
- assert.ok(cards[1].includes('<dt>7+ days</dt><dd>₱600/day</dd>'));
- assert.ok(cards[2].includes('Fly More Combo · daily rental rates'));
- assert.ok(cards[2].includes('<dt>1–2 days</dt><dd>₱700/day</dd>'));
+ for(const card of cards){
+  assert.ok(card.includes('aria-haspopup="dialog"'));
+  assert.ok(card.includes('>View prices '));
+  assert.ok(!card.includes('class="rate-schedule"'),'Full pricing should stay outside the collapsed card');
+ }
+
 });
 test('selected duration highlights the applicable tier for every package',()=>{
  for(const [id,variant,days,rate]of [['x5','Standard',1,650],['x5','Standard',3,550],['x5','Standard',7,450],['x6','Standard',1,800],['x6','Standard',3,700],['x6','Standard',7,600],['neo2','Standard',1,500],['neo2','Standard',3,450],['neo2','Standard',7,350],['neo2','Fly More Combo',1,700],['neo2','Fly More Combo',3,600],['neo2','Fly More Combo',7,500]]){
