@@ -1,7 +1,7 @@
 export const GEAR = [
-  { id: 'x5', name: 'Insta360 X5', category: 'Action camera', tag: 'For the whole adventure', image: '/assets/x5.jpg', description: 'Road trips, spontaneous weekends, at lahat ng nasa pagitan. Isama ang X5 sa next mong lakad.', packages: ['Standard'], battery: true },
-  { id: 'x6', name: 'Insta360 X6', category: 'Action camera', tag: 'A fresh perspective', image: '/assets/x6.jpg', description: 'Para sa bagong destinations at bagong memories. Piliin ang X6 para sa next mong content.', packages: ['Standard'], battery: true },
-  { id: 'neo2', name: 'DJI Neo 2', category: 'Drone', tag: 'Take the scenic route', image: '/assets/neo2.jpg', description: 'Ibang anggulo naman. Choose the drone on its own, or the Fly More Combo for your next shoot.', packages: ['Standard', 'Fly More Combo'], battery: false },
+  { id: 'x5', name: 'Insta360 X5', category: 'Action camera', tag: 'For the whole adventure', image: '/assets/x5.jpg', description: 'Road trips, spontaneous weekends, and every story in between.', packages: ['Standard'], battery: true },
+  { id: 'x6', name: 'Insta360 X6', category: 'Action camera', tag: 'A fresh perspective', image: '/assets/x6.jpg', description: 'A fresh perspective for your next destination and your next great memory.', packages: ['Standard'], battery: true },
+  { id: 'neo2', name: 'DJI Neo 2', category: 'Drone', tag: 'Take the scenic route', image: '/assets/neo2.jpg', description: 'Choose the drone on its own, or the Fly More Combo for your next shoot.', packages: ['Standard', 'Fly More Combo'], battery: false },
 ] as const;
 export type GearId = typeof GEAR[number]['id'];
 export function todayManila(now = new Date()) { return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now); }

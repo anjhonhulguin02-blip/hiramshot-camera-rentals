@@ -51,11 +51,12 @@ export function validateEquipment(value: unknown): Equipment {
   if (!Array.isArray(e.variants) || !e.variants.length || e.variants.length>10 || !Array.isArray(e.addons) || e.addons.length>15) throw new Error('Invalid variants or add-ons.');
   if (new Set(e.variants.map(v=>v.name)).size !== e.variants.length || new Set(e.addons.map(a=>a.id)).size !== e.addons.length) throw new Error('Variants and add-ons must be unique.');
   for (const v of e.variants) {
-    if (!text(v.name,80) || !Array.isArray(v.deposit) || v.deposit.length!==2 || !v.deposit.every(price) || v.deposit[0]>v.deposit[1] || !Array.isArray(v.inclusions) || v.inclusions.length>20 || !v.inclusions.every(x=>text(x,200)) || !Array.isArray(v.tiers) || !v.tiers.length || v.tiers.length>30) throw new Error('Invalid package configuration.');
+    if (!text(v.name,80) || !Array.isArray(v.deposit) || v.deposit.length!==2 || !v.deposit.every(price) || v.deposit[0]!==v.deposit[1] || !Array.isArray(v.inclusions) || v.inclusions.length>20 || !v.inclusions.every(x=>text(x,200)) || !Array.isArray(v.tiers) || !v.tiers.length || v.tiers.length>30) throw new Error('Packages require a fixed deposit and valid inclusions.');
     const covered = new Set<number>();
-    for (const t of v.tiers) { if (!Number.isInteger(t.minDays)||!Number.isInteger(t.maxDays)||t.minDays<1||t.maxDays>30||t.minDays>t.maxDays||!price(t.min)||!price(t.max)||t.min>t.max) throw new Error('Invalid rate tier.'); for(let d=t.minDays;d<=t.maxDays;d++){if(covered.has(d))throw new Error('Rate tiers overlap.');covered.add(d);} }
+    for (const t of v.tiers) { if (!Number.isInteger(t.minDays)||!Number.isInteger(t.maxDays)||t.minDays<1||t.maxDays>30||t.minDays>t.maxDays||!price(t.min)||!price(t.max)||t.min!==t.max||t.min<1) throw new Error('Use a fixed positive daily rate for each tier.'); for(let d=t.minDays;d<=t.maxDays;d++){if(covered.has(d))throw new Error('Rate tiers overlap.');if(t.max*d+v.deposit[1]<Math.max(500,Math.ceil(t.max*d*.3)))throw new Error('The rental plus deposit must cover the minimum reservation payment.');covered.add(d);} }
+    if(covered.size!==30)throw new Error('Rates must cover every rental day from 1 through 30.');
   }
-  for(const a of e.addons) if(!/^[a-z][a-z0-9-]{1,39}$/.test(a.id)||!text(a.name,80)||!price(a.min)||!price(a.max)||a.min>a.max)throw new Error('Invalid add-on.');
+  for(const a of e.addons) if(!/^[a-z][a-z0-9-]{1,39}$/.test(a.id)||!text(a.name,80)||!price(a.min)||!price(a.max)||a.min!==a.max)throw new Error('Add-ons require fixed prices and valid details.');
   return e;
 }
 

@@ -3,6 +3,7 @@ export { totp } from './totp';
 import { env } from 'cloudflare:workers';
 import { ApiError, database, identity } from './api';
 import { adminAllowed } from './rental';
+import { ensureAccount } from './accounts';
 const encoder = new TextEncoder();
 export function base64(bytes: Uint8Array) { let s='';for(const b of bytes)s+=String.fromCharCode(b);return btoa(s); }
 export function unbase64(s:string) { return Uint8Array.from(atob(s),c=>c.charCodeAt(0)); }
@@ -15,17 +16,18 @@ async function dataKey() { let bytes;try{bytes=unbase64(env.DATA_ENCRYPTION_KEY?
 export async function encrypt(value:unknown) { const iv=crypto.getRandomValues(new Uint8Array(12));const data=await crypto.subtle.encrypt({name:'AES-GCM',iv},await dataKey(),encoder.encode(JSON.stringify(value)));return `v1.${base64(iv)}.${base64(new Uint8Array(data))}`; }
 export async function decrypt<T=Record<string,string>>(value:string):Promise<T> { const [v,iv,data]=value.split('.');if(v!=='v1')throw new Error('Unsupported encryption envelope');return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:unbase64(iv)},await dataKey(),unbase64(data)))); }
 export function clientIp(request:Request) { return request.headers.get('cf-connecting-ip') ?? (import.meta.env.DEV?'127.0.0.1':'unavailable'); }
-export function eligibleAdmin(user:{userId:string;email:string}) { return adminAllowed(user.userId,env.ADMIN_USER_IDS)||user.email.toLowerCase()===(env.ADMIN_EMAIL||'hiramshotrentals@gmail.com').toLowerCase(); }
+export async function eligibleAdmin(user:import('../app/chatgpt-auth').ChatGPTUser) { const account = await ensureAccount(user); return account.account_status === 'ACTIVE' && ['ADMIN','STAFF'].includes(account.role); }
 const COOKIE='__Host-hiramshot-admin';
-export async function requireAdmin(request:Request) {
-  const user=await identity();if(!eligibleAdmin(user))throw new ApiError(403,'Owner access required.');
+export async function requireStaff(request:Request) {
+  const user=await identity();if(!await eligibleAdmin(user))throw new ApiError(403,'Operator access required.');
   const secret=requireSecret(env.ADMIN_SESSION_SECRET,'Admin session protection');
   const cookie=request.headers.get('cookie')?.split(';').map(s=>s.trim()).find(s=>s.startsWith(COOKIE+'='))?.slice(COOKIE.length+1);
   try { const [payload,signature]=decodeURIComponent(cookie??'').split('~');if(!await verifyMac(payload,signature,secret))throw 0;const data=JSON.parse(new TextDecoder().decode(unbase64(payload)));if(data.uid!==user.userId||data.exp<Date.now())throw 0; }catch{throw new ApiError(403,'Complete administrator two-factor verification.');}
   return user;
 }
+export async function requireAdmin(request:Request) { const user=await requireStaff(request); if((await ensureAccount(user)).role!=='ADMIN')throw new ApiError(403,'Administrator access required.'); return user; }
 export async function openAdminSession(request:Request,code:unknown) {
-  const user=await identity();if(!eligibleAdmin(user))throw new ApiError(403,'Owner access required.');await abuseLimit(request,user.userId,'mfa');
+  const user=await identity();if(!await eligibleAdmin(user))throw new ApiError(403,'Operator access required.');await abuseLimit(request,user.userId,'mfa');
   const factor=await adminFactor(user.userId);if(!factor)throw new ApiError(503,'Administrator MFA is not enrolled.');
   if(typeof code!=='string'||!/^\d{6}$/.test(code))throw new ApiError(400,'Enter the six-digit authenticator code.');
   const counter=Math.floor(Date.now()/30000);let matched:number|null=null;
@@ -53,6 +55,6 @@ export async function audit(request:Request,actor:string,bookingId:string,action
   const signature=await mac(JSON.stringify({id,actor,ip,bookingId,action,createdAt}),secret);
   await database().prepare('INSERT INTO security_events (id,actor,ip,booking_id,action,created_at,mac) VALUES (?,?,?,?,?,?,?)').bind(id,actor,ip,bookingId,action,createdAt,signature).run();
 }
-export function kycReady(){return env.KYC_ENABLED==='true'&&!!env.BUCKET&&!!env.DATA_ENCRYPTION_KEY&&!!env.ADMIN_SESSION_SECRET&&!!env.MALWARE_SCANNER_URL&&!!env.MALWARE_SCANNER_TOKEN&&!!env.TURNSTILE_SECRET_KEY;}
+export function kycReady(){return env.KYC_ENABLED==='true'&&!!env.BUCKET&&!!env.DATA_ENCRYPTION_KEY&&!!env.ADMIN_SESSION_SECRET&&!!env.MALWARE_SCANNER_URL&&!!env.MALWARE_SCANNER_TOKEN&&!!env.TURNSTILE_SITE_KEY&&!!env.TURNSTILE_SECRET_KEY;}
 export async function adminFactor(userId:string){if(env.ADMIN_TOTP_SECRET)return env.ADMIN_TOTP_SECRET;const row=await database().prepare('SELECT secret FROM admin_mfa WHERE user_id=? AND enabled=1').bind(userId).first<{secret:string}>();return row?(await decrypt<{secret:string}>(row.secret)).secret:null;}
 export function randomBase32(){const bytes=crypto.getRandomValues(new Uint8Array(20));let bits='',result='';for(const b of bytes)bits+=b.toString(2).padStart(8,'0');for(let i=0;i<bits.length;i+=5)result+='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'[parseInt(bits.slice(i,i+5),2)];return result;}

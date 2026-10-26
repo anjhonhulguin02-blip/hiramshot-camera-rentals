@@ -17,5 +17,11 @@ declare namespace Cloudflare {
     MALWARE_SCANNER_TOKEN?: string;
     PURGE_SECRET?: string;
     KYC_RETENTION_DAYS?: string;
+    ADMIN_CONTACT_EMAIL?: string;
+    ADMIN_EMAILS?: string;
+    APP_BASE_URL?: string;
+    NEXT_PUBLIC_SITE_URL?: string;
+    CUSTOM_DOMAIN?: string;
+    PUBLIC_INDEXING_ENABLED?: string;
   }
 }

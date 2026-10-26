@@ -5,7 +5,7 @@ Configured through Sites: random 32-byte DATA_ENCRYPTION_KEY (base64), ADMIN_SES
 Before customer launch:
 1. Configure a real TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY for the deployed hostname. Booking submission fails closed until these are present. Tokens are validated server-side, single-use, hostname/action-bound, and expire per Cloudflare policy.
 2. Configure HTTPS MALWARE_SCANNER_URL and MALWARE_SCANNER_TOKEN. The private scanner must accept a raw octet-stream POST with bearer authorization and return JSON {"clean":true} only after validated decoding and malware/content checks. A failed or unavailable scanner rejects the upload. Scanner content retention and data-processing terms require owner approval.
-3. Sign in with the configured owner account, enroll an authenticator through /admin, and initialize physical inventory. Additional site-specific user IDs may be configured through ADMIN_USER_IDS. The platform owner may configure these settings; customer accounts cannot grant themselves access.
+3. Sign in with the configured owner account, enroll an authenticator through /admin, and complete seeded physical inventory serials, accessory codes, and replacement values. Additional site-specific user IDs may be configured through ADMIN_USER_IDS. The platform owner may configure these settings; customer accounts cannot grant themselves access.
 4. Verify private bucket access, admin MFA, upload/download controls, retention, backups, privacy notice and incident response. Only then set KYC_ENABLED=true and deploy the saved source version to apply the environment revision.
 5. Activate the retention runner through an approved unattended method. Worker scheduled handling and /api/maintenance/purge exist; the endpoint currently requires an MFA admin session or the existing timestamped maintenance HMAC. A proposed extra service-token ingress was rejected by automatic approval review and was not installed. Do not claim an active cron until an unattended run and readback succeed.
 6. Document the audit-log retention period and external integrity anchoring; arrange independent security review and review the rental terms with a qualified Philippine adviser before general customer use.
@@ -21,3 +21,15 @@ python tests/database.py
 node node_modules/typescript/bin/tsc --noEmit
 
 Build and publish through the Sites skill helpers. Applied migrations and journal entries must never be rewritten. Local preview data and hosted data are separate.
+
+## Account and financial operations
+
+Use `/account` for client profile, booking, contract, payment, and deposit history. `/admin` requires platform sign-in and an authenticator code. The finance, account manager, ledger correction, return assessment, catalog edit, and security modules require ADMIN. STAFF may manage reservation, identity review, document access, and turnover after MFA; the server independently enforces every permission.
+
+Record a downpayment before confirming a reservation. Record the rental balance and refundable deposit before turnover. A receipt upload does not mark a payment paid. After inspection, confirm the actual return time and documented damage assessment, then clear the return. The server applies charges against held deposits and schedules KYC deletion seven days after clearance. Complete the actual external refund and record that payout in the ledger before finalizing deposit settlement. Additional charges beyond the held deposit remain due. Never use a reversal to represent an actual refund; it corrects an erroneous record and does not move money.
+
+Live analytics contain only `is_demo=0` transactions and report collected rental earnings separately from deposit liabilities and damage recoveries. They are not profit-after-expenses or tax accounts. Sample clients and earnings are generated only by the local seed script. Financial history remains append-only; corrective entries preserve original records.
+
+The business email and existing verified Site owner are application administrators through the server configuration. The Site audience itself has not been widened. Public launch, new viewers, or a real custom domain require the owner's explicit request. See the root deployment guide and `.env.example` for configuration. Primary registration is platform-managed; the app does not provide a local Argon2/bcrypt password login.
+
+Saved account profiles are separate from booking KYC files and are not deleted by the seven-day booking purge. Finalize account, financial receipt, contract-file, backup, and audit retention before customer launch. Legal warnings retain lawful recovery/referral language; no automatic determination of a specific criminal offense is made by the website.
