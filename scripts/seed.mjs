@@ -1,3 +1,4 @@
+import {DEFAULT_CONTACT_EMAIL} from '../lib/contact.ts';
 import { randomUUID } from 'node:crypto';
 import { mkdirSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -10,7 +11,7 @@ const now = '2026-10-26T00:00:00.000Z', quote = value => value === null ? 'NULL'
 const statements = ['PRAGMA foreign_keys=ON;'];
 const insert = (table, row, suffix = '') => statements.push(`INSERT INTO ${table}(${Object.keys(row).join(',')}) VALUES (${Object.values(row).map(quote).join(',')}) ${suffix};`);
 const adminId = '00000000-0000-4000-8000-000000000001';
-insert('users', { id: adminId, role: 'ADMIN', full_name: 'HiramShot Administrator', email: 'hiramshotrentals@gmail.com', created_at: now, updated_at: now }, 'ON CONFLICT(email) DO NOTHING');
+insert('users', { id: adminId, role: 'ADMIN', full_name: 'HiramShot Administrator', email: DEFAULT_CONTACT_EMAIL, created_at: now, updated_at: now }, 'ON CONFLICT(email) DO NOTHING');
 for (const gear of INITIAL_CATALOG) {
  insert('equipment', { id: gear.id, config: JSON.stringify(gear), updated_at: now }, 'ON CONFLICT(id) DO NOTHING');
  for (let i = 1; i <= gear.units; i++) {

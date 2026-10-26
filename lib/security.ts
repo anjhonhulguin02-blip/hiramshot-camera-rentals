@@ -1,3 +1,4 @@
+import {contactEmail} from './site';
 import { totp } from './totp';
 export { totp } from './totp';
 import { env } from 'cloudflare:workers';
@@ -44,7 +45,7 @@ export async function abuseLimit(request:Request,userId:string,scope:string) {
   for(const key of [`${scope}:ip:${ip}:${bucket}`,`${scope}:user:${userId}:${bucket}`]) { const result=await database().prepare('INSERT INTO request_limits (key,count,expires_at) VALUES (?,1,?) ON CONFLICT(key) DO UPDATE SET count=count+1 WHERE count<5 RETURNING count').bind(key,(bucket+1)*900).first();if(!result)throw new ApiError(429,'Too many attempts. Please wait 15 minutes before trying again.'); }
 }
 export async function verifyTurnstile(request:Request,token:unknown,action:string) {
-  if(!env.TURNSTILE_SECRET_KEY||!env.TURNSTILE_SITE_KEY)throw new ApiError(503,'Spam protection is not configured. Contact hiramshotrentals@gmail.com to arrange your rental.');
+  if(!env.TURNSTILE_SECRET_KEY||!env.TURNSTILE_SITE_KEY)throw new ApiError(503,`Spam protection is not configured. Contact ${contactEmail()} to arrange your rental.`);
   if(typeof token!=='string'||!token||token.length>2048)throw new ApiError(400,'Complete the security challenge.');
   const r=await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({secret:env.TURNSTILE_SECRET_KEY,response:token,remoteip:clientIp(request)==='unavailable'?undefined:clientIp(request)})});
   const data=await r.json() as {success:boolean;hostname:string;action:string};

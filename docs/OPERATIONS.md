@@ -1,6 +1,6 @@
 # Production configuration and launch checklist
 
-Configured through Sites: random 32-byte DATA_ENCRYPTION_KEY (base64), ADMIN_SESSION_SECRET, AUDIT_HMAC_KEY, DOWNLOAD_SECRET, PURGE_SECRET. Values are secrets and are not written to the source repository. ADMIN_EMAIL and CONTACT_EMAIL are hiramshotrentals@gmail.com. KYC_RETENTION_DAYS is seven; the application currently enforces seven days directly. The site remains owner-private.
+Configured through Sites: random 32-byte DATA_ENCRYPTION_KEY (base64), ADMIN_SESSION_SECRET, AUDIT_HMAC_KEY, DOWNLOAD_SECRET, PURGE_SECRET. Values are secrets and are not written to the source repository. ADMIN_EMAIL and CONTACT_EMAIL are hiramshotcamerarentals@gmail.com. KYC_RETENTION_DAYS is seven; the application currently enforces seven days directly. The site remains owner-private.
 
 Before customer launch:
 1. Configure a real TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY for the deployed hostname. Booking submission fails closed until these are present. Tokens are validated server-side, single-use, hostname/action-bound, and expire per Cloudflare policy.

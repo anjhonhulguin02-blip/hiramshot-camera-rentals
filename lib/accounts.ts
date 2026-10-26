@@ -1,3 +1,4 @@
+import {DEFAULT_CONTACT_EMAIL} from './contact';
 import { env } from 'cloudflare:workers';
 import type { ChatGPTUser } from '../app/chatgpt-auth';
 import { adminAllowed } from './rental';
@@ -11,7 +12,7 @@ export type AccountRow = {
   created_at: string; updated_at: string;
 };
 export function isConfiguredAdministrator(user: Pick<ChatGPTUser, 'userId' | 'email'>) {
-  return adminAllowed(user.userId, env.ADMIN_USER_IDS) || (env.ADMIN_EMAILS||'').split(',').map(s=>s.trim().toLowerCase()).includes(user.email.toLowerCase()) || user.email.toLowerCase() === (env.ADMIN_CONTACT_EMAIL || env.ADMIN_EMAIL || 'hiramshotrentals@gmail.com').toLowerCase();
+  return adminAllowed(user.userId, env.ADMIN_USER_IDS) || (env.ADMIN_EMAILS||'').split(',').map(s=>s.trim().toLowerCase()).includes(user.email.toLowerCase()) || user.email.toLowerCase() === (env.ADMIN_CONTACT_EMAIL || env.ADMIN_EMAIL || DEFAULT_CONTACT_EMAIL).toLowerCase();
 }
 export async function ensureAccount(user: ChatGPTUser): Promise<AccountRow> {
   if (!env.DB) throw new Error('The account database is unavailable.');
