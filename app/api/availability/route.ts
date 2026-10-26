@@ -1,4 +1,11 @@
-import { database,failure,json,ApiError } from '../../../lib/api';
-import { validateDates } from '../../../lib/rental';
-import { catalog } from '../../../lib/booking';
-export async function GET(request:Request){try{const p=new URL(request.url).searchParams,start=p.get('start'),end=p.get('end'),gear=p.get('gear'),item=(await catalog()).find(g=>g.id===gear&&g.active);if(!item)throw new ApiError(400,'Choose valid equipment.');try{validateDates(start,end);}catch(e){throw new ApiError(400,(e as Error).message);}const blocked=await database().prepare('SELECT COUNT(DISTINCT unit_id) AS count FROM booking_days WHERE unit_id IN (SELECT id FROM units WHERE equipment_id=?) AND day>=? AND day<?').bind(gear,start,end).first<{count:number}>();return json({available:(blocked?.count??0)<item.units,message:'Availability is finalized atomically when the reservation payment is confirmed.'});}catch(e){return failure(e);}}
+import {failure,json,ApiError} from '../../../lib/api';
+import {catalog} from '../../../lib/booking';
+import {rentalPeriod} from '../../../lib/finance';
+import {findAvailableUnit} from '../../../lib/inventory';
+export async function GET(request:Request){try{
+ const params=new URL(request.url).searchParams,gear=params.get('gear'),item=(await catalog()).find(g=>g.id===gear&&g.active);
+ if(!item)throw new ApiError(400,'Choose valid equipment.');
+ let period;try{period=rentalPeriod(params.get('pickup')||params.get('start')+'T09:00:00+08:00',params.get('return')||params.get('end')+'T09:00:00+08:00');}catch(error){throw new ApiError(400,(error as Error).message);}
+ const start=new Date(period.pickupMs+8*3600000).toISOString().slice(0,10),end=new Date(period.returnMs+8*3600000).toISOString().slice(0,10);
+ return json({available:!!await findAvailableUnit(item.id,period.pickupMs,period.returnMs,start,end),message:'Availability is finalized atomically after payment is recorded and the reservation is confirmed.'});
+}catch(error){return failure(error);}}

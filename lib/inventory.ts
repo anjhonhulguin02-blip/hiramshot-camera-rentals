@@ -1,5 +1,9 @@
 import { database } from './api';
 import { dailyRateTier, type Equipment } from './catalog';
+export const AVAILABLE_UNIT_SQL = "SELECT id FROM units WHERE equipment_id=? AND active=1 AND id NOT IN(SELECT unit_id FROM unit_reservations WHERE pickup_ms<? AND return_ms>?) AND id NOT IN(SELECT unit_id FROM booking_days WHERE day>=? AND day<?) AND id NOT IN(SELECT r.unit_id FROM unit_reservations r JOIN bookings b ON b.id=r.booking_id WHERE b.status='out' AND r.return_ms<?) ORDER BY id LIMIT 1";
+export function findAvailableUnit(equipmentId: string, pickupMs: number, returnMs: number, startDate: string, endDate: string) {
+ return database().prepare(AVAILABLE_UNIT_SQL).bind(equipmentId, returnMs, pickupMs, startDate, endDate, Date.now()).first<{id:string}>();
+}
 export async function synchronizeInventory(list: Equipment[]) {
   const db = database(), now = new Date().toISOString();
   for (const equipment of list) {

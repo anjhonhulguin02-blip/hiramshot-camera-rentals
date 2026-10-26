@@ -119,3 +119,13 @@ assert con.execute('SELECT COUNT(DISTINCT unit_id) FROM equipment_inventory WHER
 assert con.execute('SELECT COUNT(*) FROM users WHERE is_demo=1').fetchone()[0]==2
 assert con.execute('SELECT COALESCE(SUM(amount_centavos),0) FROM financial_transactions WHERE is_demo=0 AND is_net_revenue=1').fetchone()[0]==50000
 print('PASS: local synthetic fixtures, four packages, shared physical drone, and demo revenue exclusion')
+
+inventory_source=(root/'lib/inventory.ts').read_text(encoding='utf-8')
+availability_sql=re.search(r'AVAILABLE_UNIT_SQL = "(.*?)";',inventory_source).group(1)
+con.execute("DELETE FROM booking_days WHERE unit_id='unit-1'")
+con.execute("UPDATE units SET active=0 WHERE id='x5-unit-1'")
+assert con.execute(availability_sql,('x5',1600,1500,'2026-12-01','2026-12-02',9999)).fetchone() is None
+assert con.execute(availability_sql,('x5',4000,3000,'2026-12-01','2026-12-02',9999)).fetchone()[0]=='unit-1'
+con.execute("UPDATE bookings SET status='out' WHERE id='a'")
+assert con.execute(availability_sql,('x5',4000,3000,'2026-12-01','2026-12-02',9999)).fetchone() is None
+print('PASS: shared availability SQL excludes maintenance, interval overlaps, and overdue physical units')

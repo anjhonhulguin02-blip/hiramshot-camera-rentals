@@ -1,3 +1,4 @@
+import {findAvailableUnit} from '../../../../lib/inventory';
 import { assertSameOrigin, database, failure, identity, json, readBody, ApiError } from '../../../../lib/api';
 import { getBooking, safeBooking, personalDetails, DOCUMENT_KINDS } from '../../../../lib/booking';
 import { requireAdmin, requireStaff, audit, encrypt, kycReady, abuseLimit, verifyTurnstile } from '../../../../lib/security';
@@ -42,7 +43,7 @@ export async function POST(request:Request,context:Context){try{
   for(const item of JSON.parse(row.items) as Selection[])if(!Number.isSafeInteger(terms.replacementValues[item.equipmentId])||terms.replacementValues[item.equipmentId]<1||terms.replacementValues[item.equipmentId]>1000000)throw new ApiError(400,'Record a valid replacement value for every selected model.');
   quote.agreementTerms=terms;const statements:D1PreparedStatement[]=[];
   for(const item of JSON.parse(row.items) as Selection[]){
-   const unit=await db.prepare('SELECT id FROM units WHERE equipment_id=? AND active=1 AND id NOT IN(SELECT unit_id FROM unit_reservations WHERE pickup_ms<? AND return_ms>?) AND id NOT IN(SELECT unit_id FROM booking_days WHERE day>=? AND day<?) AND id NOT IN(SELECT r.unit_id FROM unit_reservations r JOIN bookings b ON b.id=r.booking_id WHERE b.status=\'out\' AND r.return_ms<?) ORDER BY id LIMIT 1').bind(item.equipmentId,period.returnMs,period.pickupMs,row.start_date,row.end_date,Date.now()).first<{id:string}>();
+   const unit=await findAvailableUnit(item.equipmentId,period.pickupMs,period.returnMs,row.start_date,row.end_date);
    if(!unit)throw new ApiError(409,'A selected physical unit is unavailable or the fleet is not initialized.');
    statements.push(db.prepare('INSERT INTO unit_reservations(id,unit_id,booking_id,pickup_ms,return_ms) SELECT ?,?,?,?,? WHERE EXISTS(SELECT 1 FROM bookings WHERE id=? AND status=\'requested\')').bind(crypto.randomUUID(),unit.id,id,period.pickupMs,period.returnMs,id));
   }
