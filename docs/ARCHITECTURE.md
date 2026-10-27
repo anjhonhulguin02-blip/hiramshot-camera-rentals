@@ -1,5 +1,7 @@
 # HiramShot architecture
 
+Current target: native Cloudflare Workers on hiramshot.com, using D1/R2 and Google sign-in. See CLOUDFLARE_LAUNCH.md for current boundaries and private review. The historical Sites-specific sections below describe the retained recovery deployment; Sites identity headers are not trusted by the new standalone host.
+
 The application runs as a Vinext / React full-stack application on a Cloudflare Worker through Sites. The interface uses Outfit and Work Sans, flat Swiss-inspired layouts, white, matte charcoal (#1E1E1E), and sunset orange (#FF5A1F). The existing official logo is retained.
 
 ## Components and boundaries

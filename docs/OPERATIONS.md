@@ -1,3 +1,7 @@
+# Current Cloudflare launch
+
+Use [CLOUDFLARE_LAUNCH.md](CLOUDFLARE_LAUNCH.md) for the native Worker, Google OAuth, private review and domain setup. Older Sites-specific operating notes below are retained for the separate recovery deployment. The native app has an hourly scheduler configuration; unattended deletion still requires a synthetic runtime acceptance check.
+
 # Production configuration and launch checklist
 
 Configured through Sites: random 32-byte DATA_ENCRYPTION_KEY (base64), ADMIN_SESSION_SECRET, AUDIT_HMAC_KEY, DOWNLOAD_SECRET, PURGE_SECRET. Values are secrets and are not written to the source repository. ADMIN_EMAIL and CONTACT_EMAIL are hiramshotcamerarentals@gmail.com. KYC_RETENTION_DAYS is seven; the application currently enforces seven days directly. The site remains owner-private.
@@ -40,6 +44,6 @@ Saved account profiles are separate from booking KYC files and are not deleted b
 - The KYC approval dialog requires both document-review and live-video acknowledgements. Refresh after any file or personal-detail change. Replacing a document on an unsigned reservation resets review and releases the physical-unit hold. Do not promise that released unit remains available.
 - Older uploads lack scan/hash review metadata and cannot count toward new approval. Use the audited private replacement flow; do not bulk-mark legacy files clean.
 - Unverified booking attempts: 3/rolling hour per account and IP. Verified accounts: 10. All KYC and receipt file attempts share 10/rolling hour. Invalid attempts consume capacity once admitted; CAPTCHA failure does not refund quota. Accounts on one shared network can exhaust the shared IP quota.
-- Configure Turnstile for actions `registration`, `booking`, `verification`, `upload` and `receipt-upload` on the actual application hostname. The application checks action and hostname as well as challenge success. Missing credentials keep registration/booking closed; KYC remains off until both Turnstile and a private authenticated malware scanner are configured.
+- Configure Turnstile for actions `registration`, `booking`, `verification`, `upload` and `receipt` on the actual application hostname. The application checks action and hostname as well as challenge success. Missing credentials keep registration/booking closed; KYC remains off until both Turnstile and a private authenticated malware scanner are configured.
 - The rental agreement retains the requested anti-pawning prohibition, but does not automatically declare camera non-return to be carnapping or a proven offense. [RA 10883](https://lawphil.net/statutes/repacts/ra2016/ra_10883_2016.html) defines carnapping around motor vehicles. Authorities determine the applicable classification. Identity evidence remains private; consent is specific under the [NPC consent guidelines](https://privacy.gov.ph/wp-content/uploads/2023/11/NPC-Circular-No.-2023-04_Guidelines-on-Consent_07Nov2023.pdf).
 - Creating the owner's Cloudflare account does not migrate managed Sites data or activate uploads. Follow [VERCEL_MIGRATION_PLAN.md](VERCEL_MIGRATION_PLAN.md) for the separate runtime, identity and data migration.

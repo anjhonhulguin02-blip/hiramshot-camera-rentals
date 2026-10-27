@@ -1,4 +1,4 @@
-import { env } from 'cloudflare:workers';
+import { env } from '@hiramshot/runtime';
 import { failure,json,ApiError,assertSameOrigin } from '../../../../lib/api';
 import { requireAdmin,audit,requireSecret,verifyMac } from '../../../../lib/security';
 import { purgeExpired } from '../../../../lib/purge';

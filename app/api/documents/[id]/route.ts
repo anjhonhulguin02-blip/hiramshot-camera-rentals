@@ -1,4 +1,4 @@
-import { env } from 'cloudflare:workers';
+import { env } from '@hiramshot/runtime';
 import { assertSameOrigin,database,failure,json,ApiError } from '../../../../lib/api';
 import { requireStaff,audit,base64,mac,verifyMac,unbase64,requireSecret } from '../../../../lib/security';
 type Doc={id:string;booking_id:string;object_key:string;mime:string;deleted_at:string|null};

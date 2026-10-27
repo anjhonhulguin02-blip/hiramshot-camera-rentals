@@ -1,6 +1,6 @@
 import {validateEmergencyContacts} from './verification';
 import {DEFAULT_CONTACT_EMAIL} from './contact';
-import { env } from 'cloudflare:workers';
+import { env } from '@hiramshot/runtime';
 import type { ChatGPTUser } from '../app/chatgpt-auth';
 import { adminAllowed } from './rental';
 

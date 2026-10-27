@@ -25,6 +25,12 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@hiramshot/runtime": [
+        "./lib/runtime/vercel.ts"
+      ],
+      "@hiramshot/identity": [
+        "./lib/identity/google.ts"
       ]
     },
     "types": [
@@ -36,8 +42,6 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
   "exclude": [
@@ -48,6 +52,7 @@
     ".wrangler",
     ".sites-runtime",
     "outputs",
-    "work"
+    "work",
+    ".next"
   ]
 }

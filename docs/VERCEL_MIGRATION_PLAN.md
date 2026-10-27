@@ -1,6 +1,8 @@
-# Vercel migration plan
+# Vercel migration plan (superseded hosting choice)
 
-Status: preparation only. The current private review website remains on Sites / Cloudflare Workers. Creating a personal Cloudflare account does not transfer the existing managed database or bucket into that account. No Vercel deployment or Supabase migration has been performed.
+Status: superseded on 2026-10-27. The owner selected native Cloudflare Workers hosting with D1/R2 and Google sign-in after the Vercel account was confirmed to use Hobby. A Vercel-compatible build was tested, but no Vercel deployment or paid upgrade was performed. See [CLOUDFLARE_LAUNCH.md](CLOUDFLARE_LAUNCH.md). Historical plan follows.
+
+Original status: preparation only. The current private review website remains on Sites / Cloudflare Workers. Creating a personal Cloudflare account does not transfer the existing managed database or bucket into that account. No Vercel deployment or Supabase migration has been performed.
 
 ## Current services
 

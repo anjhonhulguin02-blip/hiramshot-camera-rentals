@@ -1,0 +1,28 @@
+{
+  "$schema":"../node_modules/wrangler/config-schema.json",
+  "name":"hiramshot-camera-rentals",
+  "main":"app-worker.ts",
+  "account_id":"9df1c2820d183ae678d9f1a7ba7177b1",
+  "compatibility_date":"2026-05-15",
+  "compatibility_flags":["nodejs_compat","nodejs_compat_populate_process_env"],
+  "workers_dev":false,
+  "preview_urls":false,
+  "assets":{"binding":"ASSETS","run_worker_first":true},
+  "d1_databases":[{"binding":"DB","database_name":"hiramshot-rentals","database_id":"ab0de7af-694a-4e89-b72f-ce04af192e7b","migrations_dir":"../drizzle"}],
+  "r2_buckets":[{"binding":"BUCKET","bucket_name":"hiramshot-private"}],
+  "routes":[{"pattern":"hiramshot.com","custom_domain":true},{"pattern":"www.hiramshot.com","custom_domain":true}],
+  "triggers":{"crons":["0 * * * *"]},
+  "vars":{
+    "APP_BASE_URL":"https://hiramshot.com",
+    "CUSTOM_DOMAIN":"hiramshot.com",
+    "CONTACT_EMAIL":"hiramshotcamerarentals@gmail.com",
+    "ADMIN_CONTACT_EMAIL":"hiramshotcamerarentals@gmail.com",
+    "ADMIN_EMAILS":"hiramshotcamerarentals@gmail.com,anjhon.hulguin02@gmail.com",
+    "AUTH_TRUST_HOST":"true",
+    "AUTH_URL":"https://hiramshot.com",
+    "REVIEW_MODE":"true",
+    "PUBLIC_INDEXING_ENABLED":"false",
+    "KYC_ENABLED":"false",
+    "KYC_RETENTION_DAYS":"7"
+  }
+}

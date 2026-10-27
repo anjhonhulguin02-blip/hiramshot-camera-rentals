@@ -2,7 +2,9 @@ import {CONSUME_LIMIT_SQL,requestLimitBindings,type RequestLimitPolicy} from './
 import {contactEmail} from './site';
 import { totp } from './totp';
 export { totp } from './totp';
-import { env } from 'cloudflare:workers';
+import { env,platform,isDevelopment } from '@hiramshot/runtime';
+import {trustedClientIp} from './client-ip';
+import {requestSecurity} from './request-security';
 import { ApiError, database, identity } from './api';
 import { adminAllowed } from './rental';
 import { ensureAccount,RegistrationRequiredError } from './accounts';
@@ -17,7 +19,7 @@ export function requireSecret(value:string|undefined,name:string) { if(!value||v
 async function dataKey() { let bytes;try{bytes=unbase64(env.DATA_ENCRYPTION_KEY??'');}catch{}if(!bytes||bytes.length!==32)throw new ApiError(503,'Private data storage is not configured.');return crypto.subtle.importKey('raw',bytes,'AES-GCM',false,['encrypt','decrypt']); }
 export async function encrypt(value:unknown) { const iv=crypto.getRandomValues(new Uint8Array(12));const data=await crypto.subtle.encrypt({name:'AES-GCM',iv},await dataKey(),encoder.encode(JSON.stringify(value)));return `v1.${base64(iv)}.${base64(new Uint8Array(data))}`; }
 export async function decrypt<T=Record<string,string>>(value:string):Promise<T> { const [v,iv,data]=value.split('.');if(v!=='v1')throw new Error('Unsupported encryption envelope');return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:unbase64(iv)},await dataKey(),unbase64(data)))); }
-export function clientIp(request:Request) { return request.headers.get('cf-connecting-ip') ?? (import.meta.env.DEV?'127.0.0.1':'unavailable'); }
+export function clientIp(request:Request) { return platform==='cloudflare'?(requestSecurity()?.ip??'unavailable'):trustedClientIp(request,platform,isDevelopment,process.env.VERCEL==='1'); }
 export async function eligibleAdmin(user:import('../app/chatgpt-auth').ChatGPTUser) { try{const account = await ensureAccount(user); return account.account_status === 'ACTIVE' && ['ADMIN','STAFF'].includes(account.role);}catch(error){if(error instanceof RegistrationRequiredError)return false;throw error;} }
 const COOKIE='__Host-hiramshot-admin';
 export async function requireStaff(request:Request) {

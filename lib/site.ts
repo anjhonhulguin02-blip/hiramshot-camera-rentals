@@ -1,5 +1,5 @@
 import {DEFAULT_CONTACT_EMAIL} from './contact';
-import { env } from 'cloudflare:workers';
+import { env } from '@hiramshot/runtime';
 const DEFAULT_SITE_URL = 'https://hiramshot-camera-rentals.icycomet64.chatgpt.site';
 export function siteUrl(path = '/') {
   const configured = env.APP_BASE_URL || env.NEXT_PUBLIC_SITE_URL || (env.CUSTOM_DOMAIN ? `https://${env.CUSTOM_DOMAIN}` : DEFAULT_SITE_URL);

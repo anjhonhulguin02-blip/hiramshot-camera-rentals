@@ -1,5 +1,5 @@
 import {FILE_UPLOAD_LIMIT} from '../../../../../lib/request-limits';
-import { env } from 'cloudflare:workers';
+import { env,uploadMaxBytes } from '@hiramshot/runtime';
 import { database, failure, identity, json, ApiError } from '../../../../../lib/api';
 import { ensureAccount } from '../../../../../lib/accounts';
 import { getBooking } from '../../../../../lib/booking';
@@ -12,7 +12,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     await getBooking(id, user.userId);
     if (!env.BUCKET || !env.MALWARE_SCANNER_URL || !env.MALWARE_SCANNER_TOKEN) throw new ApiError(503, 'Private payment receipt uploads are awaiting security configuration.');
     await applyRequestLimit(request,user.userId,FILE_UPLOAD_LIMIT);
-    let bytes; try { bytes = await boundedBytes(request, MAX_FILE + 32768); } catch (error) { throw new ApiError(413, (error as Error).message); }
+    let bytes; try { bytes = await boundedBytes(request, uploadMaxBytes + 32768); } catch (error) { throw new ApiError(413, (error as Error).message); }
     const body = await new Request(request.url, { method: 'POST', headers: { 'Content-Type': request.headers.get('content-type') || '' }, body: bytes as BodyInit }).formData(), file = body.get('file');
     if (!(file instanceof File)) throw new ApiError(400, 'Choose a payment receipt.');
     await verifyTurnstile(request, body.get('turnstileToken'), 'receipt');

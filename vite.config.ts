@@ -1,4 +1,5 @@
 import vinext from "vinext";
+import {fileURLToPath} from 'node:url';
 import { defineConfig } from "vite";
 import hostingConfig from "./.openai/hosting.json";
 import { readExecutionProfile } from "./scripts/execution-profile.mjs";
@@ -52,6 +53,7 @@ export default defineConfig(async ({ command }) => {
         ? { watch: { useFsEvents: false, usePolling: true } }
         : {}),
     },
+    resolve:{alias:{'@hiramshot/runtime':fileURLToPath(new URL('./lib/runtime/sites.ts',import.meta.url)),'@hiramshot/identity':fileURLToPath(new URL('./lib/identity/sites.ts',import.meta.url))}},
     plugins: [
       vinext(),
       sites({ mockAuth: !managedLinux }),

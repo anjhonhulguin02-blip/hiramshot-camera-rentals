@@ -1,5 +1,19 @@
 # HiramShot verification record
 
+## Native Cloudflare launch — 2026-10-27
+
+- The standalone Next.js build was validated during the Vercel investigation. The owner then chose native Cloudflare Workers after confirming Vercel Hobby's non-commercial restriction. No Vercel deployment or paid upgrade was performed; its Git integration was disconnected.
+- The native Cloudflare build and Wrangler deployment validation passed. The artifact uses native D1/R2 bindings and Google identity; it does not include the Vercel D1 runtime or trust legacy Sites identity headers. The full application proxy and Worker security headers remain active.
+- 35 unit/security/business checks passed across the suite, including nine deployment/review checks. Six rendered UI regressions passed. All SQLite financial, overlap, KYC and stale-review checks passed. TypeScript noEmit passed.
+- A real D1 HTTP batch rollback and rolling account/IP quota test passed on the new owner-controlled database. Temporary synthetic probe records were removed.
+- R2 public development access is disabled. The two approved owner profiles are unlinked bootstrap records with no password; Google verification is required before claiming them.
+- Ten HTTPS checks passed on hiramshot.com: private page redirects, denied unauthenticated account/booking/document requests, denied forged identity headers, disabled unconfigured Google provider, original logo delivery, and CSP/noindex/MIME headers.
+- Native metadata confirmed both custom domain routes, disabled workers.dev/preview URLs, native database/bucket/assets bindings, and the hourly Cron Trigger. Missing internal encryption/session/audit/download keys were initialized without printing their values or rotating existing keys.
+- Production dependency audit: zero reported vulnerabilities on 2026-10-27.
+- Google OAuth credentials, Turnstile, private scanning, a full browser-driven customer/admin lifecycle, and a synthetic unattended purge acceptance check remain pending. The site stays in private review and KYC intake stays disabled. New browser automation was unavailable because the computer-use kernel could not initialize.
+
+Earlier verification history follows.
+
 - TypeScript noEmit: passed.
 - Unit/security checks: 11 passed. Coverage includes every exact rate tier and day 6/7 boundaries; combo and add-ons; minimum reservation/deposit-credit arithmetic; invalid catalogs, selections and dates; upload spoofing/size/script checks; metadata removal; signature validation; contract file SHA-256; RFC 6238 TOTP vectors.
 - SQLite schema and security checks: passed. Concurrent-overlap attempt rolls back every row in the bundle. Audit UPDATE and DELETE are blocked by append-only triggers.

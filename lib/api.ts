@@ -1,4 +1,4 @@
-import { env } from 'cloudflare:workers';
+import { env } from '@hiramshot/runtime';
 import { getChatGPTUser } from '../app/chatgpt-auth';
 import { adminAllowed } from './rental';
 import { ensureAccount,RegistrationRequiredError } from './accounts';

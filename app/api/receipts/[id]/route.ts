@@ -1,4 +1,4 @@
-import { env } from 'cloudflare:workers';
+import { env } from '@hiramshot/runtime';
 import { database, failure, identity, ApiError } from '../../../../lib/api';
 import { getBooking } from '../../../../lib/booking';
 import { requireStaff, audit } from '../../../../lib/security';

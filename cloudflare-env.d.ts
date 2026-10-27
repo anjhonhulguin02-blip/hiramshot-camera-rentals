@@ -1,5 +1,11 @@
 declare namespace Cloudflare {
   interface Env {
+    ASSETS?: Fetcher;
+    AUTH_SECRET?: string;
+    AUTH_GOOGLE_ID?: string;
+    AUTH_GOOGLE_SECRET?: string;
+    AUTH_TRUST_HOST?: string;
+    REVIEW_MODE?: string;
     DB?: D1Database;
     BUCKET?: R2Bucket;
     ADMIN_USER_IDS?: string;

@@ -1,6 +1,8 @@
-# HiramShot deployment and custom domain setup
+# Legacy Sites deployment and custom domain setup
 
-The current deployment remains owner-private at https://hiramshot-camera-rentals.icycomet64.chatgpt.site. No custom domain has been purchased or attached. This guide prepares the connection without changing the site's audience.
+This section records the older Sites deployment. The domain hiramshot.com has since been registered and the owner selected native Cloudflare Workers hosting. Use docs/CLOUDFLARE_LAUNCH.md and cloudflare/wrangler.app.jsonc for the current launch. Do not apply this legacy guide to the new Google-authenticated host.
+
+The older deployment remains owner-private at https://hiramshot-camera-rentals.icycomet64.chatgpt.site. No custom domain was attached to that legacy Sites deployment. This guide prepares the connection without changing the site's audience.
 
 ## Runtime configuration
 
