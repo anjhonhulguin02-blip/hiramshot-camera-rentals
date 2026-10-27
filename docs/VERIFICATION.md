@@ -28,3 +28,13 @@ Live browser automation was unavailable during this correction; rendered compone
 - Financial report: three-page synthetic report rendered and visually checked, including the original logo, columns, continuation headers, and rental-versus-liability totals. No real customer or financial data was used.
 - Production dependency advisory check: zero reported production vulnerabilities on 2026-10-26. Independent security review is not replaced by this check.
 - Custom-domain DNS, external service credentials, and unattended retention remain unconfigured; the site stays private. The final build/deployment result is supplied by the Sites workflow.
+
+## Anti-fraud upgrade — 2026-10-27
+
+- 26 unit/security/finance tests passed, including normalized Philippine mobile aliases, emergency contact separation, all five clean document kinds, mandatory boolean video-review acknowledgement, and atomic rolling account/IP quotas at the 3-booking and 10-file boundaries.
+- Six rendered-component checks passed. They cover all earlier rate displays plus required registration contacts, disabled submission without a challenge, both admin review checkboxes, all five missing-document approval cases, mandatory anti-fraud consent, and pickup/meetup-only choices.
+- SQLite integration checks passed against all migrations and actual API prepared SQL. Missing or unreviewed files and missing video review block confirmation; changed file versions block stale approval; duplicate hashes and malformed metadata are rejected. Existing overlap, ledger, immutable-history and quote-snapshot checks also passed.
+- 25 anonymous HTTP route cases passed, including registration and the common documents endpoint, plus disabled-service/private-indexing assertions. Three authenticated local checks verified missing Turnstile fails closed for both booking and registration, and an emergency number alias equal to the renter's number is rejected. Only supported local development identity and synthetic profile values were used.
+- TypeScript noEmit passed. A three-page synthetic agreement was rendered and visually inspected: original logo, prominent anti-pawning clause, restricted evidence consent, signature and hashes remain legible.
+- New browser automation was unavailable because the computer-use kernel could not initialize. Component rendering and HTTP checks do not establish a full browser-driven paid rental lifecycle. Real Turnstile, private scanning, KYC review, payment, signing and unattended purge still need configured-service acceptance checks.
+- The Vercel migration document is a plan. No backend provider migration, Vercel deployment, custom-domain binding or change to the owner-private Site audience was performed.

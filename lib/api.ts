@@ -1,7 +1,7 @@
 import { env } from 'cloudflare:workers';
 import { getChatGPTUser } from '../app/chatgpt-auth';
 import { adminAllowed } from './rental';
-import { ensureAccount } from './accounts';
+import { ensureAccount,RegistrationRequiredError } from './accounts';
 export class ApiError extends Error { constructor(public status: number, message: string) { super(message); } }
 export function json(data: unknown, status = 200) { return Response.json(data, { status, headers: { 'Cache-Control': 'no-store, private', 'X-Content-Type-Options': 'nosniff' } }); }
 export async function identity() { const user = await getChatGPTUser(); if (!user) throw new ApiError(401, 'Sign in to continue.'); const account = await ensureAccount(user); if (account.account_status !== 'ACTIVE') throw new ApiError(403, 'Your account is restricted. Contact HiramShot for assistance.'); return user; }
@@ -19,10 +19,4 @@ export async function readBody(request: Request) {
   const joined = new Uint8Array(total); let offset = 0; for (const c of chunks) { joined.set(c, offset); offset += c.length; }
   try { return JSON.parse(new TextDecoder().decode(joined)); } catch { throw new ApiError(400, 'Invalid JSON.'); }
 }
-export function failure(error: unknown) { if (error instanceof ApiError) return json({ error: error.message }, error.status); console.error('Request operation failed', error instanceof Error ? error.name : 'unknown'); return json({ error: 'Something went wrong. Please try again.' }, 500); }
-export async function rateLimit(userId: string) {
-  const db = database(), now = Math.floor(Date.now() / 1000), hour = Math.floor(now / 3600);
-  const result = await db.prepare('INSERT INTO request_limits (key,count,expires_at) VALUES (?,1,?) ON CONFLICT(key) DO UPDATE SET count=count+1 WHERE count<5 RETURNING count').bind(`${userId}:${hour}`, (hour + 1) * 3600).first();
-  if (!result) throw new ApiError(429, 'You have reached 5 requests this hour. Please try again later.');
-  await db.prepare('DELETE FROM request_limits WHERE expires_at < ?').bind(now - 86400).run();
-}
+export function failure(error: unknown) { if(error instanceof RegistrationRequiredError)return json({error:error.message,registrationRequired:true},403); if (error instanceof ApiError) return json({ error: error.message }, error.status); console.error('Request operation failed', error instanceof Error ? error.name : 'unknown'); return json({ error: 'Something went wrong. Please try again.' }, 500); }

@@ -41,7 +41,7 @@ export function rentalPeriod(pickup: string, returned: string, now = Date.now())
 }
 export function lifecycleStatus(status: string, returned: string | null, now = Date.now()) {
   if (status === 'out' && returned && Date.parse(returned) < now) return 'OVERDUE_ALERT';
-  return ({ requested: 'PENDING_DOWNPAYMENT', reserved: 'PENDING_KYC_REVIEW', verification: 'PENDING_KYC_REVIEW', verified: 'CONFIRMED_RESERVED', signed: 'CONFIRMED_RESERVED', out: 'ACTIVE_TURNED_OVER', cleared: 'CLEARED_AND_RETURNED', returned: 'CLEARED_AND_RETURNED', cancelled: 'CANCELLED_FORFEITED' } as Record<string, string>)[status] ?? 'PENDING_DOWNPAYMENT';
+  return ({ requested: 'PENDING_KYC_REVIEW', reserved: 'CONFIRMED_RESERVED', verification: 'PENDING_KYC_REVIEW', verified: 'PENDING_DOWNPAYMENT', signed: 'CONFIRMED_RESERVED', out: 'ACTIVE_TURNED_OVER', cleared: 'CLEARED_AND_RETURNED', returned: 'CLEARED_AND_RETURNED', cancelled: 'CANCELLED_FORFEITED' } as Record<string, string>)[status] ?? 'PENDING_DOWNPAYMENT';
 }
 export function csvCell(value: unknown) {
   if (typeof value === 'number' && Number.isFinite(value)) return String(value);

@@ -1,3 +1,4 @@
+import {validateEmergencyContacts} from './verification';
 import {DEFAULT_CONTACT_EMAIL} from './contact';
 import { env } from 'cloudflare:workers';
 import type { ChatGPTUser } from '../app/chatgpt-auth';
@@ -14,6 +15,7 @@ export type AccountRow = {
 export function isConfiguredAdministrator(user: Pick<ChatGPTUser, 'userId' | 'email'>) {
   return adminAllowed(user.userId, env.ADMIN_USER_IDS) || (env.ADMIN_EMAILS||'').split(',').map(s=>s.trim().toLowerCase()).includes(user.email.toLowerCase()) || user.email.toLowerCase() === (env.ADMIN_CONTACT_EMAIL || env.ADMIN_EMAIL || DEFAULT_CONTACT_EMAIL).toLowerCase();
 }
+export class RegistrationRequiredError extends Error { constructor(){super('Complete your HiramShot registration and security challenge before booking.');} }
 export async function ensureAccount(user: ChatGPTUser): Promise<AccountRow> {
   if (!env.DB) throw new Error('The account database is unavailable.');
   const existing = await env.DB.prepare('SELECT * FROM users WHERE auth_user_id=?').bind(user.userId).first<AccountRow>();
@@ -29,10 +31,8 @@ export async function ensureAccount(user: ChatGPTUser): Promise<AccountRow> {
   if (byEmail) {
     if (byEmail.auth_user_id && byEmail.auth_user_id !== user.userId) throw new Error('This email is already linked to another identity.');
     await env.DB.prepare('UPDATE users SET auth_user_id=?,updated_at=? WHERE id=? AND auth_user_id IS NULL').bind(user.userId, now, byEmail.id).run();
-  } else {
-    await env.DB.prepare('INSERT INTO users(id,auth_user_id,role,full_name,email,created_at,updated_at) VALUES (?,?,?,?,?,?,?) ON CONFLICT(email) DO NOTHING')
-      .bind(crypto.randomUUID(), user.userId, isConfiguredAdministrator(user) ? 'ADMIN' : 'CLIENT', user.fullName || user.displayName, email, now, now).run();
-  }
+  } else { throw new RegistrationRequiredError(); }
+
   const saved = await env.DB.prepare('SELECT * FROM users WHERE auth_user_id=?').bind(user.userId).first<AccountRow>();
   if (!saved) throw new Error('Account registration could not be completed.');
   return saved;
@@ -50,7 +50,8 @@ export function validateProfile(input: unknown) {
     result[key] = text.trim();
   }
   if (result.fullName.length < 2) throw new Error('Enter your full name.');
-  for (const key of ['mobileNumber', 'emergencyContactNumber']) if (result[key] && !/^[+\d() -]{7,25}$/.test(result[key])) throw new Error('Enter a valid mobile or emergency contact number.');
+  const contacts=validateEmergencyContacts(result.mobileNumber,result.emergencyContactName,result.emergencyContactRelationship,result.emergencyContactNumber);
+  result.mobileNumber=contacts.mobile;result.emergencyContactName=contacts.emergencyName;result.emergencyContactRelationship=contacts.emergencyRelationship;result.emergencyContactNumber=contacts.emergencyPhone;
   if (result.socialMediaLink) { try { const url = new URL(result.socialMediaLink); if (url.protocol !== 'https:' || url.username || url.password || !['facebook.com','www.facebook.com','m.facebook.com','instagram.com','www.instagram.com'].includes(url.hostname)) throw 0; } catch { throw new Error('Use an HTTPS Facebook or Instagram profile URL.'); } }
   return result;
 }

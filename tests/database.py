@@ -32,7 +32,7 @@ route=(root/'app/api/bookings/[id]/documents/route.ts').read_text(encoding='utf-
 query=re.search(r"prepare\('(INSERT INTO kyc_documents.*?)'\)\.bind",route).group(1).replace("\\'", "'")
 con.rollback()
 con.execute("UPDATE bookings SET status='verification' WHERE id='a'")
-args=('doc-1','a','government-id-1','private-1','image/png',100,'now','a')
+args=('doc-1','a','government-id-1','private-1','image/png',100,'now','a'*64,'a')
 con.execute(query,args)
 assert con.execute('SELECT COUNT(*) FROM kyc_documents').fetchone()[0]==1
 con.execute(query,('doc-2',)+args[1:])
@@ -108,7 +108,7 @@ print('PASS: exact-time reservations allow back-to-back handovers and reject INS
 
 create_source=(root/'app/api/bookings/route.ts').read_text(encoding='utf-8-sig')
 create_query=next(q.replace("\\'", "'") for q in re.findall(r"prepare\('((?:\\.|[^'\\])*)'\)",create_source) if q.startswith('INSERT INTO bookings('))
-con.execute(create_query,('c','client-auth','new-key','2026-11-01','2026-11-04',3,'[]','{}','encrypted-test','now','now','client','HSR-TEST-3','2026-11-01T09:00:00+08:00','2026-11-04T09:00:00+08:00','Synthetic event','MEETUP',165000,200000,50000))
+con.execute(create_query,('c','client-auth','new-key','2026-11-01','2026-11-04',3,'[]','{}','encrypted-test','now','now','client','HSR-TEST-3','2026-11-01T09:00:00+08:00','2026-11-04T09:00:00+08:00','Synthetic event','MEETUP',165000,200000,50000,'PENDING_KYC_REVIEW','2026-10-27T00:00:00Z','2026-10-27-security-v2'))
 assert con.execute("SELECT total_rental_fee_centavos,required_reservation_centavos FROM bookings WHERE id='c'").fetchone()==(165000,50000)
 con.commit()
 print('PASS: actual booking creation SQL and all bound snapshot fields')
@@ -126,6 +126,10 @@ con.execute("DELETE FROM booking_days WHERE unit_id='unit-1'")
 con.execute("UPDATE units SET active=0 WHERE id='x5-unit-1'")
 assert con.execute(availability_sql,('x5',1600,1500,'2026-12-01','2026-12-02',9999)).fetchone() is None
 assert con.execute(availability_sql,('x5',4000,3000,'2026-12-01','2026-12-02',9999)).fetchone()[0]=='unit-1'
+for index,kind in enumerate(['government-id-2','company-school-id','proof-of-billing','selfie-with-id']):
+ con.execute("INSERT INTO kyc_documents(id,booking_id,kind,object_key,mime,size,created_at,sha256,scan_status,reviewed_at,reviewed_by) VALUES (?,'a',?,?, 'image/png',100,'now',?,'CLEAN','now',?)",('support-'+str(index),kind,'support-key-'+str(index),hex(index+11)[2:]*64,admin))
+con.execute("UPDATE kyc_documents SET reviewed_at='now',reviewed_by=? WHERE booking_id='a'",(admin,))
+con.execute("UPDATE bookings SET personal='synthetic-verification',verified_at='now',live_video_verified_at='now',live_video_verified_by=? WHERE id='a'",(admin,))
 con.execute("UPDATE bookings SET status='out' WHERE id='a'")
 assert con.execute(availability_sql,('x5',4000,3000,'2026-12-01','2026-12-02',9999)).fetchone() is None
 print('PASS: shared availability SQL excludes maintenance, interval overlaps, and overdue physical units')

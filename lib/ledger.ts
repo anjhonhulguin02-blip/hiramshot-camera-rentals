@@ -10,7 +10,7 @@ export type FinancialBooking = BookingRow & {
   client_id?: string | null; booking_reference_code?: string | null; pickup_datetime?: string | null; return_datetime?: string | null;
   total_rental_fee_centavos?: number | null; security_deposit_centavos?: number | null; required_reservation_centavos?: number | null;
   late_penalty_centavos?: number; damage_deduction_centavos?: number; financial_version?: number; last_financial_operation?: string | null;
-  is_demo?: number; destination_or_event?: string | null; lifecycle_status?: string; returned_at?: string | null;
+  kyc_version?:number; is_demo?: number; destination_or_event?: string | null; lifecycle_status?: string; returned_at?: string | null;
 };
 type LedgerRow = { equipment_id: string | null; transaction_type: string; amount_centavos: number; is_net_revenue: number; escrow_effect_centavos: number; cash_effect_centavos: number };
 export {summarizeFinance} from './finance';
@@ -98,7 +98,7 @@ export async function recordPayment(request: Request, actor: ChatGPTUser, bookin
   const state = await financialState(booking), items = await ensureBookingItems(booking), entries: Entry[] = [];
   const rentalWeights = items.map(i => i.rental_centavos), depositWeights = items.map(i => i.deposit_centavos);
   if (kind === 'RESERVATION') {
-    if (booking.status !== 'requested' || amount !== state.reservationDueCentavos) throw new ApiError(409, 'Record the exact outstanding reservation downpayment for a pending booking.');
+    if (!['requested','verification','verified'].includes(booking.status) || amount !== state.reservationDueCentavos) throw new ApiError(409, 'Record the exact outstanding reservation downpayment for a pending booking.');
     const rental = Math.min(amount, state.rentalBalanceCentavos), excess = amount - rental;
     addAllocated(entries, items, rental, rentalWeights, 'RESERVATION_DOWNPAYMENT', true);
     addAllocated(entries, items, excess, depositWeights, 'SECURITY_DEPOSIT_COLLECTED', false, 1);

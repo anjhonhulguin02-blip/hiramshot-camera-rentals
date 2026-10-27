@@ -14,8 +14,8 @@
     "db:generate": "drizzle-kit generate",
     "seed:generate": "node scripts/seed.mjs",
     "seed:local": "node scripts/seed.mjs --apply-local",
-    "test": "node --experimental-strip-types --import ./tests/resolve-types.mjs --test tests/rental.test.ts tests/finance.test.ts",
-    "test:components": "node --experimental-strip-types --import ./tests/render-tsx.mjs --test tests/rate-display.test.mjs"
+    "test": "node --experimental-strip-types --import ./tests/resolve-types.mjs --test tests/rental.test.ts tests/finance.test.ts tests/anti-fraud.test.ts",
+    "test:components": "node --experimental-strip-types --import ./tests/render-tsx.mjs --test tests/rate-display.test.mjs tests/kyc-components.test.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

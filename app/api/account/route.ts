@@ -1,11 +1,12 @@
 import { getChatGPTUser } from '../../chatgpt-auth';
 import { assertSameOrigin, database, failure, identity, json, readBody, ApiError } from '../../../lib/api';
-import { ensureAccount, PRIVATE_PROFILE_FIELDS, validateProfile } from '../../../lib/accounts';
+import { ensureAccount, RegistrationRequiredError, PRIVATE_PROFILE_FIELDS, validateProfile } from '../../../lib/accounts';
 import { audit, decrypt, encrypt } from '../../../lib/security';
 export async function GET() {
   try {
     const user = await getChatGPTUser(); if (!user) throw new ApiError(401, 'Sign in to continue.');
-    const account = await ensureAccount(user), profile: Record<string, string> = { fullName: account.full_name };
+    let account;try{account=await ensureAccount(user);}catch(error){if(error instanceof RegistrationRequiredError)return json({registrationRequired:true});throw error;}
+    const profile: Record<string, string> = { fullName: account.full_name };
     for (const [key, column] of Object.entries(PRIVATE_PROFILE_FIELDS)) profile[key] = account[column as keyof typeof account] ? (await decrypt<{ value: string }>(String(account[column as keyof typeof account]))).value : '';
     return json({ account: { id: account.id, email: account.email, role: account.role, fullName: account.full_name, kycStatus: account.kyc_status, videoCallVerified: !!account.video_call_verified, trustedRepeatClient: !!account.is_trusted_repeat_client, accountStatus: account.account_status, createdAt: account.created_at }, profile });
   } catch (error) { return failure(error); }

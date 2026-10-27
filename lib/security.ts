@@ -1,10 +1,11 @@
+import {CONSUME_LIMIT_SQL,requestLimitBindings,type RequestLimitPolicy} from './request-limits';
 import {contactEmail} from './site';
 import { totp } from './totp';
 export { totp } from './totp';
 import { env } from 'cloudflare:workers';
 import { ApiError, database, identity } from './api';
 import { adminAllowed } from './rental';
-import { ensureAccount } from './accounts';
+import { ensureAccount,RegistrationRequiredError } from './accounts';
 const encoder = new TextEncoder();
 export function base64(bytes: Uint8Array) { let s='';for(const b of bytes)s+=String.fromCharCode(b);return btoa(s); }
 export function unbase64(s:string) { return Uint8Array.from(atob(s),c=>c.charCodeAt(0)); }
@@ -17,7 +18,7 @@ async function dataKey() { let bytes;try{bytes=unbase64(env.DATA_ENCRYPTION_KEY?
 export async function encrypt(value:unknown) { const iv=crypto.getRandomValues(new Uint8Array(12));const data=await crypto.subtle.encrypt({name:'AES-GCM',iv},await dataKey(),encoder.encode(JSON.stringify(value)));return `v1.${base64(iv)}.${base64(new Uint8Array(data))}`; }
 export async function decrypt<T=Record<string,string>>(value:string):Promise<T> { const [v,iv,data]=value.split('.');if(v!=='v1')throw new Error('Unsupported encryption envelope');return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:unbase64(iv)},await dataKey(),unbase64(data)))); }
 export function clientIp(request:Request) { return request.headers.get('cf-connecting-ip') ?? (import.meta.env.DEV?'127.0.0.1':'unavailable'); }
-export async function eligibleAdmin(user:import('../app/chatgpt-auth').ChatGPTUser) { const account = await ensureAccount(user); return account.account_status === 'ACTIVE' && ['ADMIN','STAFF'].includes(account.role); }
+export async function eligibleAdmin(user:import('../app/chatgpt-auth').ChatGPTUser) { try{const account = await ensureAccount(user); return account.account_status === 'ACTIVE' && ['ADMIN','STAFF'].includes(account.role);}catch(error){if(error instanceof RegistrationRequiredError)return false;throw error;} }
 const COOKIE='__Host-hiramshot-admin';
 export async function requireStaff(request:Request) {
   const user=await identity();if(!await eligibleAdmin(user))throw new ApiError(403,'Operator access required.');
@@ -43,6 +44,14 @@ export async function openAdminSession(request:Request,code:unknown) {
 export async function abuseLimit(request:Request,userId:string,scope:string) {
   const bucket=Math.floor(Date.now()/900000),secret=requireSecret(env.AUDIT_HMAC_KEY,'Security protection'),ip=await mac(clientIp(request),secret);
   for(const key of [`${scope}:ip:${ip}:${bucket}`,`${scope}:user:${userId}:${bucket}`]) { const result=await database().prepare('INSERT INTO request_limits (key,count,expires_at) VALUES (?,1,?) ON CONFLICT(key) DO UPDATE SET count=count+1 WHERE count<5 RETURNING count').bind(key,(bucket+1)*900).first();if(!result)throw new ApiError(429,'Too many attempts. Please wait 15 minutes before trying again.'); }
+}
+export async function applyRequestLimit(request:Request,userId:string,policy:RequestLimitPolicy,cost=1) {
+ const now=Math.floor(Date.now()/1000),secret=requireSecret(env.AUDIT_HMAC_KEY,'Security protection');
+ const [userHash,ipHash]=await Promise.all([mac(userId,secret),mac(clientIp(request),secret)]);
+ const base='limit:v2:'+policy.scope+':',userPrefix=base+'account:'+userHash+':',ipPrefix=base+'ip:'+ipHash+':';
+ const result=await database().prepare(CONSUME_LIMIT_SQL).bind(...requestLimitBindings(userPrefix,ipPrefix,policy,now,crypto.randomUUID(),cost)).run();
+ if(result.meta.changes!==2)throw new ApiError(429,`The ${policy.scope} limit is ${policy.limit} per rolling hour for this account or IP. Please try again later.`);
+ await database().prepare('DELETE FROM request_limits WHERE key IN (SELECT key FROM request_limits WHERE expires_at<=? LIMIT 100)').bind(now).run();
 }
 export async function verifyTurnstile(request:Request,token:unknown,action:string) {
   if(!env.TURNSTILE_SECRET_KEY||!env.TURNSTILE_SITE_KEY)throw new ApiError(503,`Spam protection is not configured. Contact ${contactEmail()} to arrange your rental.`);

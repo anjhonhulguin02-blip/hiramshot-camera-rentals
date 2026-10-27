@@ -1,6 +1,8 @@
-# vinext-starter
+# HiramShot Camera Rentals
 
-A clean full-stack starter running on [vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and Drizzle support.
+A rental platform using Vinext / React, Cloudflare D1 (SQLite), Drizzle and private R2 files. The current deployment runs on Sites-managed Cloudflare Workers. The original business logo and supplied equipment photos and videos are preserved.
+
+See [architecture](docs/ARCHITECTURE.md), [operations](docs/OPERATIONS.md) and the [Vercel migration plan](docs/VERCEL_MIGRATION_PLAN.md). This Worker build requires runtime and authentication migration before deployment as a Vercel Next.js application. Primary sign-in is currently managed by Sites; new application profiles require a server-verified Turnstile challenge.
 
 ## Prerequisites
 
@@ -50,7 +52,7 @@ Local tool usage metrics are disabled by default. Set `WRANGLER_SEND_METRICS=tru
 - the remaining `scripts/` files select execution profiles and run installation, development, and builds; the plugin's helpers orchestrate the Sites lifecycle
 - `dist/` contains generated deployment output; `.vinext/`, `.wrangler/`, and `.sites-runtime/` contain ignored local tool state
 - `db/index.ts` reads the D1 binding from the Cloudflare Worker environment
-- `db/schema.ts` starts intentionally empty
+- `db/schema.ts` declares the rental, identity, inventory and financial schema
 - `@cloudflare/workers-types` provides Worker types; `cloudflare-env.d.ts` declares optional `DB`/`BUCKET` bindings—update these declarations if binding names change
 - `examples/d1/` contains an optional D1 example surface
 - `drizzle.config.ts` supports local migration generation when needed

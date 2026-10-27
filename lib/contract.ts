@@ -1,6 +1,6 @@
 import { PDFDocument,StandardFonts,rgb,type PDFPage } from 'pdf-lib';
 import { LOGO_BASE64 } from './logo-data';
-import { POLICIES,POLICY_VERSION } from './policies';
+import { POLICIES,POLICY_VERSION,ANTI_PAWNING_CLAUSE,ANTI_FRAUD_ACKNOWLEDGEMENT } from './policies';
 import { digest,unbase64 } from './crypto';
 import type { Quote } from './catalog';
 export type Signature={name:string;strokes:number[][][]};
@@ -16,12 +16,14 @@ export async function generateContract(input:{id:string;name:string;start:string
   function heading(text:string){if(y<110)newPage();y-=6;paragraph(text,11,bold);}
   newPage();heading('Parties and booking');paragraph(`Booking reference: ${input.id}`);paragraph(`Renter: ${input.name} | Lessor: HiramShot Camera Rentals`);paragraph(`Pickup date: ${input.start} | Return date: ${input.end} | Rental days: ${input.days}`);paragraph(`Business contact: ${input.contactEmail}`);
   if(input.quote.agreementTerms){const t=input.quote.agreementTerms;paragraph(`Agreed pickup location: ${t.location}`);paragraph(`Pickup: ${t.pickupAt} | Return cutoff: ${t.returnAt}`);for(const l of input.quote.lines)paragraph(`${l.name} agreed market replacement value: PHP ${t.replacementValues[l.equipmentId]}`);}
+  heading('ANTI-PAWNING AND LAWFUL RECOVERY');paragraph(ANTI_PAWNING_CLAUSE,10,bold);
   heading('Equipment and charges');for(const l of input.quote.lines)paragraph(`${l.name} - ${l.variant}. Daily rate: PHP ${l.dailyMax}. Add-ons: ${l.addons.map(a=>`${a.name} (PHP ${a.max}/day)`).join(', ')||'None'}. Inclusions: ${l.inclusions.join('; ')}.`);
   paragraph(`Combo discount: PHP ${input.quote.discount}. Total rental: PHP ${input.quote.totalMax}. Refundable deposit: PHP ${input.quote.depositMax}. Reservation downpayment: PHP ${input.quote.reservationMax}.`);
   paragraph('Any downpayment exceeding the rental charge is credited toward the refundable deposit. The remaining rental balance and deposit are payable before or at turnover.');
   paragraph('The exact pickup location, cutoff times, inspection record, and documented replacement values must be agreed in the handover record before equipment is released. This agreement does not itself prove payment or handover.');
   heading(`Rental terms - version ${POLICY_VERSION}`);for(const p of POLICIES){heading(p.title);paragraph(p.text);}
   heading('Privacy and verification');paragraph('Verification documents are accessed only through authorized private review. Uploaded KYC files are scheduled for deletion seven calendar days after Cleared & Returned, and the personal verification form is removed at that time. The transaction record and contract integrity hashes are retained. Contract retention is governed by the published privacy notice and applicable legal requirements.');
+  heading('Anti-fraud acknowledgement');paragraph(ANTI_FRAUD_ACKNOWLEDGEMENT);
   heading('Electronic acknowledgement and signature');paragraph('By signing, the renter confirms that they reviewed and accepted every listed policy and authorized the recorded electronic signature. A file hash supports integrity checking; it does not independently establish identity, legal enforceability, or non-repudiation.');
   if(y<230)newPage();const boxY=y-110;page.drawRectangle({x:45,y:boxY,width:505,height:100,borderWidth:.6,borderColor:gray});
   if(input.signature.strokes.length){for(const stroke of input.signature.strokes)for(let i=1;i<stroke.length;i++)page.drawLine({start:{x:58+stroke[i-1][0]*470,y:boxY+92-stroke[i-1][1]*80},end:{x:58+stroke[i][0]*470,y:boxY+92-stroke[i][1]*80},thickness:1.4,color:charcoal});}else page.drawText(clean(input.signature.name).slice(0,60),{x:60,y:boxY+40,size:25,font:italic,color:charcoal});y=boxY-20;

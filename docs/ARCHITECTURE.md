@@ -11,7 +11,7 @@ Browser -> Sites authenticated dispatch -> Worker security headers -> server rou
 - Owner allowlist plus TOTP second factor. Admin cookie: __Host- prefix, HttpOnly, Secure, SameSite=Strict, 15-minute lifetime. Password handling and primary sessions belong to the platform; this app does not store passwords or falsely claim control over its password hash policy.
 - Database-backed catalog with category, package, exact rate tiers, compatible add-ons, deposit and physical unit counts. The migration seeds four packages across three physical units. The owner fills in serial numbers and replacement values in Inventory.
 - Quote snapshot recalculated server-side at booking creation. 1–2, 3–6, and 7–30 day tiers; compatible combo discount; 30% downpayment with PHP 500 minimum. Excess downpayment credits refundable deposit.
-- Booking state: requested -> reserved -> verification -> verified -> signed -> out -> cleared -> returned. Cleared & Returned begins the 7-day deletion timer; returned confirms the remaining refundable liability was settled through the ledger. Cancellation is restricted by state and releases inventory.
+- Booking state: requested -> verification -> verified -> reserved -> signed -> out -> cleared -> returned. Requested and verification map to PENDING_KYC_REVIEW. Verified means identity approved, awaiting downpayment confirmation. Only reserved maps to CONFIRMED_RESERVED. Cleared & Returned begins the 7-day deletion timer; returned confirms the remaining refundable liability was settled through the ledger. Cancellation is restricted by state and releases inventory.
 - Reservation: exact pickup/return timestamps determine started 24-hour rental periods. Atomic interval records and INSERT/UPDATE overlap triggers prevent double-booking of physical units, including across both drone packages. Back-to-back intervals are allowed; overdue units block new reservations. Legacy occupied-day records remain honored. Signed pickup/cutoff times cannot silently change.
 - Private KYC: 5 MB limit; extension, declared MIME and magic validation; image metadata stripping; configured malware scan required; randomized R2 keys; no public object endpoint. Upload gate stays disabled until production services are configured.
 - Admin document links bind document ID, admin ID, HMAC and five-minute expiry; a valid MFA session is still required. Access, link issuance, deletion and administrative changes are audited.
@@ -27,11 +27,11 @@ Browser -> Sites authenticated dispatch -> Worker security headers -> server rou
 | units | id PK, equipment_id FK, active |
 | bookings | id PK, user_id + request_key unique; date range; item and quote snapshots; AES-GCM contact and verification envelopes; status/payment flags; contract keys and hashes; return/refund/purge timestamps |
 | booking_days | id PK, booking_id FK, unit_id FK, day; UNIQUE(unit_id, day) |
-| kyc_documents | id PK, booking_id FK, kind, private object key, MIME, size, created/deleted timestamps; unique booking/document kind |
+| kyc_documents | id PK, booking_id FK, kind, private object key, MIME, size, SHA-256, scan status, reviewed timestamp/operator, created/deleted timestamps; unique booking/kind and active booking/file hash |
 | admin_mfa | user_id PK, encrypted TOTP secret, enabled, created_at |
 | mfa_used | used identity/time-counter PK, expiry; rejects replayed OTP |
 | security_events | event ID, actor, IP, booking ID, action, timestamp, HMAC; append-only triggers |
-| request_limits | hashed IP/account/scope/time bucket, count, expiry |
+| request_limits | hashed IP/account/scope event keys, count, expiry; atomic account/IP rolling-window admission |
 
 Early starter rental tables remain in the first migration for migration-history integrity. Their legacy HTTP write routes return 410; all active rentals use bookings and booking_days.
 
@@ -73,3 +73,13 @@ A financial-version compare-and-swap serializes each booking's payment changes; 
 The client portal exposes only the signed-in account's bookings, profile, receipt downloads, contracts, countdowns, and payment history. Finance and user APIs check administrator role plus MFA, even when called without their UI. Private receipt files undergo the same bounded validation and private scanning as verification files. Analytics/export queries exclude synthetic fixtures and include no customer identity documents.
 
 Canonical domain configuration is centralized in `lib/site.ts`; the Worker enforces security headers, configured CORS, canonical alias routing, and private-route noindex. See `../DEPLOYMENT_AND_CUSTOM_DOMAIN.md` for DNS and operational release conditions. No domain has been bound and indexing remains disabled.
+
+## Anti-fraud enforcement
+
+Application registration is explicit: primary platform sign-in alone no longer creates a client database row. `/api/account/register` requires Turnstile action `registration`, consent, and encrypted mandatory renter/emergency contact fields. Profile and KYC validation normalize Philippine mobile aliases and reject a contact number equal to the renter's own number. Existing imported/operator profiles remain accessible and must complete required details before KYC approval.
+
+Five required kinds are government-id-1, government-id-2, company-school-id, proof-of-billing and selfie-with-id. A clean scan and distinct sanitized-file hash are required. SQLite triggers independently block confirmed states without all five reviewed files and a recorded live-video operator. Legacy uploads are marked LEGACY_REVIEW_REQUIRED; they are never automatically promoted to clean. The administrator must affirm document review and the physical-ID video check. A KYC version changes on file/personal changes, preventing approval against a stale review screen. Deleting an unsigned booking's document returns it to review and releases its unit hold; signing and active-rental documents are locked against manual replacement.
+
+Unverified booking attempts are limited to 3 per rolling hour, verified booking attempts to 10, and registration to 3. KYC and receipt upload attempts share 10 per rolling hour. Both the authenticated account and trusted ingress IP must have capacity; a single SQLite statement admits both counters or neither. Valid Turnstile action and hostname are checked server-side for registration, booking and KYC uploads. The common `/api/documents?bookingId=...` endpoint delegates to the same protected booking upload handler.
+
+The booking consent is stored with policy version and time. New contracts prominently prohibit sub-leasing, third-party lending and pawning, and limit identity-document use to lawful restricted evidence channels. Existing signed agreements keep their original bytes and hashes. See the operations record for the legal-language adaptation and [Vercel migration plan](VERCEL_MIGRATION_PLAN.md) for hosting dependencies.

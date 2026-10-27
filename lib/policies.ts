@@ -1,6 +1,9 @@
-export const POLICY_VERSION = '2026-10-25-v1';
+export const POLICY_VERSION = '2026-10-27-security-v2';
+export const ANTI_PAWNING_CLAUSE = 'Sub-leasing, lending to third parties, or pawning the equipment is strictly prohibited. Failure to return the equipment within 24 hours past the agreed return time without notice and consent may result in lawful recovery action and formal complaints for suspected fraud, misappropriation, or other applicable offenses, as determined by competent authorities under Philippine law.';
+export const ANTI_FRAUD_ACKNOWLEDGEMENT = 'I understand that sub-leasing, lending, or pawning rented equipment is prohibited. Suspected fraud or unlawful retention may result in formal complaints. HiramShot may use my submitted documents as evidence through lawful, restricted channels. Any security alert must comply with applicable law and must not publish my identification documents.';
 export const POLICIES = [
-  { title: 'Responsibility and permitted use', text: 'The renter is responsible for the equipment and all accessories from turnover until the return inspection is complete. Sub-leasing, lending to another party, and pawning equipment are prohibited.' },
+  { title: 'Anti-pawning and lawful recovery', text: ANTI_PAWNING_CLAUSE },
+  { title: 'Responsibility and permitted use', text: 'The renter is responsible for the equipment and all accessories from turnover until the return inspection is complete.' },
   { title: 'Action camera care', text: 'Do not remove lens guards. Scratches, cracks, or marks on the actual lenses or LCD screen are chargeable. Do not submerge cameras in saltwater or pools without an official dive case. Seal battery and USB covers before water exposure. The renter is responsible for water damage, subject to the agreed assessment and applicable law.' },
   { title: 'Drone operation', text: 'Do not operate in strong winds, rain, restricted or no-fly areas, near airports or military facilities, or dangerously low over water. The renter must follow applicable aviation rules. Crash damage, water damage, or an unrecovered flyaway may result in charges for documented official service-center repairs or the agreed market replacement value.' },
   { title: 'Reservation and cancellation', text: 'A reservation downpayment of 30% of the rental total, with a PHP 500 minimum, is required to lock the slot. Any amount exceeding the rental fee is credited toward the refundable security deposit. The rental portion of a reservation payment is non-refundable for sudden customer cancellations, subject to applicable law; deposit credits remain refundable. A payment instruction or submitted request does not itself confirm receipt of payment.' },
@@ -12,9 +15,9 @@ export const POLICIES = [
   { title: 'Return inspection and deposit refund', text: 'On return, HiramShot inspects lenses, LCD screen, drone gimbal where applicable, propellers where applicable, batteries, memory card, and all listed accessories. If everything is complete, undamaged, and working properly, the full deposit is due for immediate refund. Any proposed deduction must be documented and communicated.' },
 ];
 export const BOOKING_STEPS = [
-  ['Select and reserve', 'Choose your gear, add-ons, and dates. An owner-confirmed quote and a 30% reservation downpayment lock the slot.'],
+  ['Request your gear', 'Choose your gear, add-ons, and dates. A request does not confirm a reservation.'],
   ['Verify your identity', 'Complete your details, submit the required documents through the private portal, and arrange a one-minute verification call.'],
-  ['Review and sign', 'Read the rental agreement, acknowledge the required terms, and sign to generate your contract PDF.'],
+  ['Confirm and sign', 'After all five documents and the live video review are approved, HiramShot confirms payment and availability. Then review and sign the agreement.'],
   ['Pay and pick up', 'Settle the balance and deposit. First-time renters must use self-pickup or meetup. Complete the inspection at turnover.'],
   ['Return and receive your deposit', 'Return on time. Once the inspection is cleared, the full security deposit is due for immediate refund.'],
 ];

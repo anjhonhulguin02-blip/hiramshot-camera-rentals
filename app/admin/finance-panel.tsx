@@ -34,7 +34,7 @@ export function BookingFinance({ booking, receipts, reload }: { booking: PublicB
   async function load() { try { const v = await api('/api/finance/payments?booking=' + booking.id); setHistory(v.payments); } catch (e) { setError((e as Error).message); } }
   useEffect(() => { void load(); }, [booking.id, booking.paid_total, booking.status]);
   useEffect(() => { if (open) dialog.current?.showModal(); else dialog.current?.close(); }, [open]);
-  function show() { setKind(booking.status === 'requested' ? 'RESERVATION' : booking.status === 'cleared' ? 'DEPOSIT_REFUND' : 'RENTAL_BALANCE'); setError(''); setRequestKey(crypto.randomUUID()); setOpen(true); }
+  function show() { setKind(booking.finance?.reservationDueCentavos ? 'RESERVATION' : booking.status === 'cleared' ? 'DEPOSIT_REFUND' : 'RENTAL_BALANCE'); setError(''); setRequestKey(crypto.randomUUID()); setOpen(true); }
   async function record(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError(''); const form = new FormData(event.currentTarget);
     try { await api('/api/finance/payments', post({ bookingId: booking.id, requestKey, kind, amountPhp: form.get('amount'), paymentMethod: form.get('method'), reference: form.get('reference'), receiptId: form.get('receiptId') || null, remarks: form.get('remarks'), confirmed: form.get('confirmed') === 'on' })); setOpen(false); await reload(); await load(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); }
