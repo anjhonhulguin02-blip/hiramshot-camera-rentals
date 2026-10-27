@@ -20,6 +20,8 @@ The application Worker retains CSP, HSTS on HTTPS, same-origin mutation checks, 
 
 ## Google sign-in setup
 
+Configured on 2026-10-28 in the business-owned Google Cloud project `hiramshot-camera-rentals`. The OAuth app remains External/Testing with the two approved owner accounts as test users. Its web client credentials are stored as Worker secrets, and business-account sign-in through the real Google callback has succeeded. No Google Cloud paid trial or billing upgrade was activated.
+
 Create a Google Cloud OAuth client of type **Web application** for HiramShot. Use only the provider's default OpenID/email/profile scopes, not Gmail access.
 
 - Authorized JavaScript origin: `https://hiramshot.com`
@@ -30,11 +32,13 @@ Create a Google Cloud OAuth client of type **Web application** for HiramShot. Us
 
 The `www` host redirects to the canonical root. Begin and complete authentication on the canonical host so cookies and the registered callback match.
 
+The API routes pass the original web Request directly to Auth.js Core with the same configuration used by NextAuth's session/server-action helpers. This avoids the current Vinext NextRequest URL-copy incompatibility, which discarded cookies and POST data when `AUTH_URL` was set. Keep the canonical Worker/proxy checks and all OAuth/CSRF checks enabled. The Worker also serves Vinext's generated `/_next/static/` CSS and browser modules through the static asset binding, with the same security headers as other responses.
+
 ## Private review
 
 `REVIEW_MODE=true` admits application pages/APIs only for an authenticated Google principal whose email is in the configured administrator allowlist. Sign-in endpoints and static assets remain accessible. Forged identity headers do not satisfy this gate. Review mode fails closed if the session secret is missing.
 
-Google setup is required before owners can enter the new private review site. This is separate from administrator MFA and role checks, which still protect customer documents and administrative operations after sign-in. Keep `PUBLIC_INDEXING_ENABLED=false` during review.
+Owners can now enter the private review site through Google sign-in. Administrator MFA and role checks separately protect customer documents and administrative operations after sign-in. Keep `PUBLIC_INDEXING_ENABLED=false` during review.
 
 ## Booking and document intake
 

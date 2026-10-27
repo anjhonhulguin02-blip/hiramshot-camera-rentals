@@ -24,6 +24,7 @@
     "test:deployment": "node --experimental-strip-types --import ./tests/resolve-types.mjs --test tests/deployment.test.ts tests/review-access.test.ts"
   },
   "dependencies": {
+    "@auth/core": "0.41.3",
     "@aws-sdk/client-s3": "3.1157.0",
     "@base-ui/react": "^1.7.0",
     "@hookform/resolvers": "^5.7.1",

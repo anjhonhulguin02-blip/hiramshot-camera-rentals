@@ -22,7 +22,8 @@ export default {
    response=url.pathname.startsWith('/api/')?Response.json({error:'Owner review access required.'},{status:401}):Response.redirect(new URL('/login?return_to='+encodeURIComponent(url.pathname+url.search),url).toString(),303);
    return secure(request,response,env);
   }
-  if(url.pathname.startsWith('/assets/')&&env.ASSETS)return secure(request,await env.ASSETS.fetch(request),env);
+  // Vinext emits CSS and browser modules here; serve them from the asset binding.
+  if((url.pathname.startsWith('/assets/')||url.pathname.startsWith('/_next/static/'))&&env.ASSETS)return secure(request,await env.ASSETS.fetch(request),env);
   // Capture trusted edge metadata before the application proxy strips ingress headers.
   const ip=request.headers.get('cf-connecting-ip');
   response=await withRequestSecurity({ip:ip&&isIP(ip)?ip:import.meta.env.DEV?'127.0.0.1':'unavailable'},()=>handler.fetch(canonicalRequest(request),env,ctx));

@@ -1,5 +1,14 @@
 # HiramShot verification record
 
+## Google sign-in and static asset repair — 2026-10-28
+
+- Created the business-owned Google OAuth web client with owner approval of the Google API User Data Policy. The app remains External/Testing, restricted to the two configured owner test users. Client credentials were stored as Worker secrets; the temporary credential file was removed. No secret value was printed or committed.
+- Fixed deployed CSS and JavaScript returning 404 by routing generated `/_next/static/` files through the native asset binding. The original logo, photos, compact rate dialogs and existing design are preserved.
+- Fixed the Vinext/NextAuth Request-copy incompatibility with `AUTH_URL`: API handlers now call Auth.js Core with the original Request and the shared authentication configuration. Canonical origin enforcement, full proxy, secure cookies, PKCE/S256, state, nonce, verified Google identities and CSRF checks remain enabled.
+- Native build, TypeScript noEmit and nine deployment/security checks passed. Live HTTPS checks passed for private page/API protection, denied forged identity headers, the configured provider, all 11 referenced CSS/JavaScript resources, Google-only OpenID/email/profile scopes, secure check cookies, the canonical callback and invalid-CSRF rejection.
+- Browser automation recovered. Real Google business-account login successfully returned to the styled homepage at `https://hiramshot.com/`. Original branding and the X5 price dialog were visually checked. Login layouts at small-phone and landscape sizes had no horizontal overflow.
+- Review mode remains enabled, indexing disabled and KYC intake disabled. Turnstile, a private scanner, owner MFA enrollment, the complete rental lifecycle and unattended synthetic purge acceptance still require completion before customer launch.
+
 ## Native Cloudflare launch — 2026-10-27
 
 - The standalone Next.js build was validated during the Vercel investigation. The owner then chose native Cloudflare Workers after confirming Vercel Hobby's non-commercial restriction. No Vercel deployment or paid upgrade was performed; its Git integration was disconnected.
