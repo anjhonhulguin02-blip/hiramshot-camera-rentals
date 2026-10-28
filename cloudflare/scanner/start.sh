@@ -1,5 +1,7 @@
 #!/bin/sh
 set -eu
+mkdir -p /dev/shm/clamav
+chmod 700 /dev/shm/clamav
 # No document paths or bytes are logged. FreshClam downloads signatures, never client files.
 freshclam --stdout
 freshclam --daemon --foreground --stdout --checks=4 &
