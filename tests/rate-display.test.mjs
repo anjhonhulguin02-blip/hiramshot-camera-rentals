@@ -6,11 +6,20 @@ import Storefront from '../app/storefront.tsx';
 import RateSchedule from '../app/rate-schedule.tsx';
 import Wizard from '../app/book/wizard.tsx';
 import {INITIAL_CATALOG} from '../lib/catalog.ts';
+import {CinematicHero,GearJourney} from '../app/cinematic-experience.tsx';
 
 const render=(Component,props)=>renderToStaticMarkup(React.createElement(Component,props));
+test('cinematic booking links retain selected dates and the film viewer respects active gear',()=>{
+ const dates={start:'2099-10-31',end:'2099-11-03'};
+ const html=render(CinematicHero,{...dates,paused:true,onToggle:()=>{}})+render(GearJourney,{...dates,catalog:INITIAL_CATALOG,paused:true,onPrices:()=>{}});
+ const links=[...html.matchAll(/href="(\/book\?[^\"]+)"/g)].map(match=>new URL(match[1].replaceAll('&amp;','&'),'https://example.invalid'));
+ assert.equal(links.length,6);for(const link of links){assert.equal(link.searchParams.get('start'),dates.start);assert.equal(link.searchParams.get('end'),dates.end);}
+ const inactive=render(GearJourney,{catalog:INITIAL_CATALOG.map(gear=>({...gear,active:gear.id==='x5'})),paused:true,onPrices:()=>{}});
+ assert.ok(inactive.includes('/book?gear=x5'));assert.ok(!inactive.includes('/book?gear=x6'));assert.ok(!inactive.includes('/book?gear=neo2'));
+});
 test('compact catalog cards keep the correct rate and provide a View prices dialog trigger',()=>{
  const html=render(Storefront,{user:null});
- const cards=[...html.matchAll(/<article class="gear-card">([\s\S]*?)<\/article>/g)].map(m=>m[1]);
+ const cards=[...html.matchAll(/<article class="gear-card"[^>]*>([\s\S]*?)<\/article>/g)].map(m=>m[1]);
  assert.equal(cards.length,3);
  for(const [index,name,rate,deposit]of [[0,'Insta360 X5',650,2000],[1,'Insta360 X6',800,3000],[2,'DJI Neo 2',500,1500]]){
   assert.ok(cards[index].includes(`<h3>${name}</h3>`));

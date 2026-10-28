@@ -6,12 +6,14 @@ The site is configured for private owner review. Google sign-in and Turnstile ar
 
 ## Main features
 
+- Cinematic storefront with layered 3D photo panels, scroll-linked product films, a motion pause control and reduced-motion support, using original owner-supplied equipment media.
 - Responsive catalog with compact price dialogs and exact 1–2, 3–6 and 7+ day rates.
 - Private client profiles, booking progress, KYC submission, electronic agreements and payment history.
 - Five mandatory clean document kinds, live physical-ID/video review, emergency contacts and pickup/meetup restrictions.
 - Administrator/staff roles, operator MFA, audit logs, inventory and exact-time physical-unit reservations.
 - An append-only financial ledger separating rental income from refundable deposit liabilities.
 - Private file downloads, encrypted personal details, action-bound Turnstile checks and atomic account/IP quotas.
+- Verification field hints, linked error summaries, document progress and clear service-availability explanations. Client and backend verification rules share the same validator.
 - Hourly retention handler for verification data due seven calendar days after return clearance.
 - Verified-rental reviews, 1–5 star ratings, administrator moderation and Top picks based on real rentals. Photo/video intake requires a private media processor.
 - Email/password, show/hide password and recovery screens, with secure email delivery prepared but disabled until configured. Google remains available.
