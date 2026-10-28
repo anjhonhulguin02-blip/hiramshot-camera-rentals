@@ -1,5 +1,7 @@
 # Current Cloudflare launch
 
+For the current client Requirements tab, admin Verification queue and prepared private ClamAV scanner, see [PRIVATE_SCANNER.md](PRIVATE_SCANNER.md). The owner declined paid activation on 2026-10-28. No scanner was deployed, the optional service binding is absent, and KYC_ENABLED stays false. These UI changes do not activate uploads or approve any client's identity.
+
 Use [CLOUDFLARE_LAUNCH.md](CLOUDFLARE_LAUNCH.md) for the native Worker, Google OAuth, private review and domain setup. Older Sites-specific operating notes below are retained for the separate recovery deployment. The native app has an hourly scheduler configuration; unattended deletion still requires a synthetic runtime acceptance check.
 
 Current access is controlled by the private three-email `ADMIN_ACCESS_EMAILS` Worker secret, verified identity, active administrator profile and application MFA. Legacy contact-email and `ADMIN_USER_IDS` settings do not grant native administrator access. Google and Turnstile are configured on hiramshot.com. Password delivery, private scanning/media processing and merchant payments remain disabled pending their respective setup and acceptance checks. See [email setup](EMAIL_SIGN_IN.md), [reviews](REVIEWS.md) and [payments preparation](PAYMENTS_SETUP.md).

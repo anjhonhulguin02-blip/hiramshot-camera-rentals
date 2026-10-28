@@ -1,4 +1,5 @@
 import {CONSUME_LIMIT_SQL,requestLimitBindings,type RequestLimitPolicy} from './request-limits';
+import {scannerConfigured} from './malware-scanner';
 import {contactEmail} from './site';
 import { totp } from './totp';
 export { totp } from './totp';
@@ -67,6 +68,6 @@ export async function audit(request:Request,actor:string,bookingId:string,action
   const signature=await mac(JSON.stringify({id,actor,ip,bookingId,action,createdAt}),secret);
   await database().prepare('INSERT INTO security_events (id,actor,ip,booking_id,action,created_at,mac) VALUES (?,?,?,?,?,?,?)').bind(id,actor,ip,bookingId,action,createdAt,signature).run();
 }
-export function kycReady(){return env.KYC_ENABLED==='true'&&!!env.BUCKET&&!!env.DATA_ENCRYPTION_KEY&&!!env.ADMIN_SESSION_SECRET&&!!env.MALWARE_SCANNER_URL&&!!env.MALWARE_SCANNER_TOKEN&&!!env.TURNSTILE_SITE_KEY&&!!env.TURNSTILE_SECRET_KEY;}
+export function kycReady(){return env.KYC_ENABLED==='true'&&!!env.DB&&!!env.BUCKET&&!!env.DATA_ENCRYPTION_KEY&&!!env.ADMIN_SESSION_SECRET&&scannerConfigured(env)&&!!env.TURNSTILE_SITE_KEY&&!!env.TURNSTILE_SECRET_KEY;}
 export async function adminFactor(userId:string){if(env.ADMIN_TOTP_SECRET)return env.ADMIN_TOTP_SECRET;const row=await database().prepare('SELECT secret FROM admin_mfa WHERE user_id=? AND enabled=1').bind(userId).first<{secret:string}>();return row?(await decrypt<{secret:string}>(row.secret)).secret:null;}
 export function randomBase32(){const bytes=crypto.getRandomValues(new Uint8Array(20));let bits='',result='';for(const b of bytes)bits+=b.toString(2).padStart(8,'0');for(let i=0;i<bits.length;i+=5)result+='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'[parseInt(bits.slice(i,i+5),2)];return result;}

@@ -25,7 +25,7 @@ console.log('PASS',assets.length,'referenced CSS/JavaScript assets');
 for(const path of ['/forgot-password','/create-account','/reset-password','/verify-email']){
  const response=await fetch(base+path,{redirect:'manual'});assert.equal(response.status,200,path);assert.ok((await response.text()).includes('Email sign-in is being prepared.'));console.log('PASS recovery/setup page',path);
 }
-for(const path of ['/api/admin/reviews','/api/account/reviews','/api/reviews'])assert.equal((await fetch(base+path,{redirect:'manual'})).status,401,path);
+for(const path of ['/api/admin/reviews','/api/admin/documents/00000000-0000-4000-8000-000000000001/preview','/api/account/reviews','/api/reviews'])assert.equal((await fetch(base+path,{redirect:'manual'})).status,401,path);
 for(const path of ['/api/password/request','/api/password/complete']){
  const response=await fetch(base+path,{method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:'{}'});assert.equal(response.status,503,path+' must remain disabled before email setup');
  const cross=await fetch(base+path,{method:'POST',headers:{Origin:'https://attacker.invalid','Content-Type':'application/json'},body:'{}'});assert.equal(cross.status,403,path+' rejects cross-origin writes');

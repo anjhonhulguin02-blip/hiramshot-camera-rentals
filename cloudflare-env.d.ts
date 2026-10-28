@@ -27,6 +27,7 @@ declare namespace Cloudflare {
     TURNSTILE_SECRET_KEY?: string;
     KYC_ENABLED?: string;
     MALWARE_SCANNER_URL?: string;
+    MALWARE_SCANNER?: Fetcher;
     MALWARE_SCANNER_TOKEN?: string;
     PURGE_SECRET?: string;
     KYC_RETENTION_DAYS?: string;

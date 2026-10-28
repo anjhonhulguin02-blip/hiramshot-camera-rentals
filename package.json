@@ -14,8 +14,8 @@
     "db:generate": "drizzle-kit generate",
     "seed:generate": "node scripts/seed.mjs",
     "seed:local": "node scripts/seed.mjs --apply-local",
-    "test": "node --experimental-strip-types --import ./tests/resolve-types.mjs --test tests/rental.test.ts tests/finance.test.ts tests/anti-fraud.test.ts tests/deployment.test.ts tests/review-access.test.ts tests/password.test.ts tests/reviews.test.ts tests/paymongo.test.ts tests/personal-validation.test.ts",
-    "test:components": "node --experimental-strip-types --import ./tests/render-tsx.mjs --test tests/rate-display.test.mjs tests/kyc-components.test.mjs tests/login-components.test.mjs tests/authenticator-components.test.mjs tests/verification-components.test.mjs",
+    "test": "node --experimental-strip-types --import ./tests/resolve-types.mjs --test tests/rental.test.ts tests/finance.test.ts tests/anti-fraud.test.ts tests/deployment.test.ts tests/review-access.test.ts tests/password.test.ts tests/reviews.test.ts tests/paymongo.test.ts tests/personal-validation.test.ts tests/malware-scanner.test.ts",
+    "test:components": "node --experimental-strip-types --import ./tests/render-tsx.mjs --test tests/rate-display.test.mjs tests/kyc-components.test.mjs tests/login-components.test.mjs tests/authenticator-components.test.mjs tests/verification-components.test.mjs tests/requirements-components.test.mjs",
     "build:vercel": "next build --webpack",
     "dev:vercel": "next dev --webpack --hostname 127.0.0.1 --port 3000",
     "start:vercel": "next start --hostname 127.0.0.1 --port 3000",
@@ -57,6 +57,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@cloudflare/containers": "0.3.7",
     "@cloudflare/vite-plugin": "1.37.1",
     "@cloudflare/workers-types": "4.20260515.1",
     "@tailwindcss/postcss": "4.2.1",

@@ -1,5 +1,13 @@
 # HiramShot verification record
 
+## Client requirements and private reviewer — 2026-10-28
+
+Client portal now has Upload requirements and a Requirements tab with the five-document checklist and booking-scoped upload flow. Administrators have a Verification queue, private image preview, private download, replacement controls and Messenger call instructions. No standalone pre-booking document storage was added; files remain linked to the rental so retention can be enforced. Preview requires the existing strict admin allowlist, active role and MFA, a CLEAN scan verdict, matching stored byte hash and safe image format. No customer file is embedded in server-rendered markup or a public R2 URL.
+
+The owner retained antivirus and declined paid activation. The private ClamAV deployment is prepared only; KYC intake remains disabled. The scanner client now verifies a byte-bound verdict, blocks redirects and oversized responses, and gives retry guidance on scanner failure. See PRIVATE_SCANNER.md for activation prerequisites and acceptance gates. Mock protocol tests are not proof of a working live engine.
+
+Validation: 56 unit/business/security checks, 17 rendered component checks, two Python mock-protocol checks, TypeScript noEmit and native Cloudflare build passed. Production dependency audit reported zero vulnerabilities. Local browser QA used synthetic documents only and verified the private memory image, modal close/focus and 390px layouts without horizontal overflow. The deployed business-account client portal shows the Requirements tab and upload-paused notice. Live HTTPS checks passed, including anonymous preview denial and 17 referenced CSS/JavaScript assets. Actual ClamAV/EICAR acceptance, real uploads and the MFA-authorized live document preview remain untested until scanner activation. No client identity was approved, no real document was uploaded, and no paid infrastructure was activated.
+
 ## Cinematic storefront and clearer verification — 2026-10-28
 
 - Deployed the storefront redesign: actual equipment photographs on layered CSS 3D panels, pointer tilt, native-scroll GSAP depth/reveal effects and a sticky three-perspective film viewer. Original logo, compact price dialogs, rates, account/admin security and private review settings are preserved. The films and six optimized WebP copies come from the owner's supplied media directory; original files are untouched. Source metadata was removed from the web copies. These are photographic 3D planes, not fabricated camera models.

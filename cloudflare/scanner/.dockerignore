@@ -1,0 +1,5 @@
+*
+!Dockerfile
+!scanner.py
+!start.sh
+!clamd.conf
