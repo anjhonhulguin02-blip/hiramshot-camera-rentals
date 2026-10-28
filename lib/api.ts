@@ -1,11 +1,9 @@
 import { env } from '@hiramshot/runtime';
 import { getChatGPTUser } from '../app/chatgpt-auth';
-import { adminAllowed } from './rental';
 import { ensureAccount,RegistrationRequiredError } from './accounts';
 export class ApiError extends Error { constructor(public status: number, message: string) { super(message); } }
 export function json(data: unknown, status = 200) { return Response.json(data, { status, headers: { 'Cache-Control': 'no-store, private', 'X-Content-Type-Options': 'nosniff' } }); }
 export async function identity() { const user = await getChatGPTUser(); if (!user) throw new ApiError(401, 'Sign in to continue.'); const account = await ensureAccount(user); if (account.account_status !== 'ACTIVE') throw new ApiError(403, 'Your account is restricted. Contact HiramShot for assistance.'); return user; }
-export function isAdmin(id: string) { return adminAllowed(id, env.ADMIN_USER_IDS); }
 export function database() { if (!env.DB) throw new ApiError(503, 'Requests are temporarily unavailable. Please try again later.'); return env.DB; }
 export function assertSameOrigin(request: Request) {
   if (request.headers.get('origin') !== new URL(request.url).origin || request.headers.get('sec-fetch-site') === 'cross-site') throw new ApiError(403, 'Please submit from this website.');

@@ -24,3 +24,14 @@ test('trusted ingress context stays isolated across concurrent requests',async()
  const values=await Promise.all(['203.0.113.1','203.0.113.2'].map(ip=>withRequestSecurity({ip},async()=>{await Promise.resolve();return requestSecurity()?.ip;})));
  assert.deepEqual(values,['203.0.113.1','203.0.113.2']);assert.equal(requestSecurity(),undefined);
 });
+test('private review validates password-session versions and denies revoked or unverified identities',async()=>{
+ const name='__Secure-authjs.session-token',principal='email:00000000-0000-4000-8000-000000000001';
+ const token=await encode({token:{principal,email:'owner@example.invalid',authMethod:'password',emailVerified:true,credentialId:'synthetic',credentialVersion:2},secret,salt:name,maxAge:300});
+ const request=new Request('https://example.invalid/account',{headers:{Cookie:name+'='+token}});
+ const mock=(version:number,verified:string|null)=>({prepare:()=>({bind:()=>({first:async()=>({principal,session_version:version,verified_at:verified})})})}) as unknown as D1Database;
+ assert.equal(await canReview(request,secret,'owner@example.invalid',mock(2,'verified'),true),true);
+ assert.equal(await canReview(request,secret,'owner@example.invalid',mock(3,'verified'),true),false);
+ assert.equal(await canReview(request,secret,'owner@example.invalid',mock(2,null),true),false);
+ assert.equal(await canReview(request,secret,'owner@example.invalid',mock(2,'verified'),false),false);
+ assert.equal(reviewOwner({principal,email:'owner@example.invalid'},'owner@example.invalid'),false);
+});

@@ -1,0 +1,1 @@
+export function administratorEmail(email:unknown,allowlist:string|undefined){return typeof email==='string'&&!!allowlist&&allowlist.split(',').map(value=>value.trim().toLowerCase()).filter(Boolean).includes(email.trim().toLowerCase());}

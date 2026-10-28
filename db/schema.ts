@@ -10,6 +10,18 @@ export const bookedDays = sqliteTable('booked_days', {
   id: text('id').primaryKey(), rentalId: text('rental_id').notNull().references(() => rentals.id), gear: text('gear').notNull(), day: text('day').notNull(),
 }, t => [uniqueIndex('gear_day_exclusive').on(t.gear, t.day), index('days_rental').on(t.rentalId)]);
 export const requestLimits = sqliteTable('request_limits', { key: text('key').primaryKey(), count: integer('count').notNull(), expiresAt: integer('expires_at').notNull() });
+export const passwordCredentials=sqliteTable('password_credentials',{
+ id:text('id').primaryKey(),principal:text('principal').notNull(),email:text('email').notNull(),fullName:text('full_name').notNull(),passwordHash:text('password_hash'),verifiedAt:text('verified_at'),sessionVersion:integer('session_version').notNull().default(0),createdAt:text('created_at').notNull(),updatedAt:text('updated_at').notNull(),
+},t=>[uniqueIndex('password_email_unique').on(t.email),uniqueIndex('password_principal_unique').on(t.principal)]);
+export const passwordTokens=sqliteTable('password_tokens',{
+ tokenHash:text('token_hash').primaryKey(),credentialId:text('credential_id').notNull().references(()=>passwordCredentials.id),purpose:text('purpose').notNull(),expectedVersion:integer('expected_version').notNull(),expiresAt:integer('expires_at').notNull(),usedNonce:text('used_nonce'),
+},t=>[index('password_token_expiry').on(t.expiresAt)]);
+export const reviews=sqliteTable('reviews',{
+ id:text('id').primaryKey(),bookingId:text('booking_id').notNull().references(()=>bookings.id),clientId:text('client_id').notNull().references(()=>users.id),equipmentId:text('equipment_id').notNull().references(()=>equipment.id),rating:integer('rating').notNull(),body:text('body').notNull(),displayName:text('display_name').notNull(),status:text('status').notNull().default('PENDING'),version:integer('version').notNull().default(0),publicConsentAt:text('public_consent_at'),moderationReason:text('moderation_reason'),moderatedBy:text('moderated_by').references(()=>users.id),createdAt:text('created_at').notNull(),updatedAt:text('updated_at').notNull(),
+},t=>[uniqueIndex('review_booking_gear_unique').on(t.bookingId,t.equipmentId),index('review_public_status').on(t.status,t.createdAt)]);
+export const reviewMedia=sqliteTable('review_media',{
+ id:text('id').primaryKey(),reviewId:text('review_id').notNull().references(()=>reviews.id),objectKey:text('object_key').notNull(),mime:text('mime').notNull(),size:integer('size').notNull(),sha256:text('sha256').notNull(),scanStatus:text('scan_status').notNull(),createdAt:text('created_at').notNull(),deletedAt:text('deleted_at'),
+},t=>[index('review_media_parent').on(t.reviewId)]);
 export const auditLog = sqliteTable('audit_log', { id: text('id').primaryKey(), actor: text('actor').notNull(), rentalId: text('rental_id').notNull(), action: text('action').notNull(), createdAt: text('created_at').notNull() });
 export const equipment = sqliteTable('equipment', { id: text('id').primaryKey(), config: text('config').notNull(), updatedAt: text('updated_at').notNull() });
 export const units = sqliteTable('units', { id: text('id').primaryKey(), equipmentId: text('equipment_id').notNull().references(()=>equipment.id), active: integer('active').notNull().default(1) }, t=>[index('units_equipment').on(t.equipmentId)]);

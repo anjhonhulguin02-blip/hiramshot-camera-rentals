@@ -43,6 +43,20 @@
       "when": 1793080516126,
       "tag": "0005_bored_stone_men",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1793140739851,
+      "tag": "0006_password_accounts",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1793141751754,
+      "tag": "0007_verified_rental_reviews",
+      "breakpoints": true
     }
   ]
 }

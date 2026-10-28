@@ -4,6 +4,13 @@ declare namespace Cloudflare {
     AUTH_SECRET?: string;
     AUTH_GOOGLE_ID?: string;
     AUTH_GOOGLE_SECRET?: string;
+    PASSWORD_AUTH_ENABLED?: string;
+    PASSWORD_HASHING_VERIFIED?: string;
+    AUTH_EMAIL_FROM?: string;
+    RESEND_API_KEY?: string;
+    REVIEW_MEDIA_ENABLED?: string;
+    REVIEW_MEDIA_PROCESSOR_URL?: string;
+    REVIEW_MEDIA_PROCESSOR_TOKEN?: string;
     AUTH_TRUST_HOST?: string;
     REVIEW_MODE?: string;
     DB?: D1Database;
@@ -24,7 +31,7 @@ declare namespace Cloudflare {
     PURGE_SECRET?: string;
     KYC_RETENTION_DAYS?: string;
     ADMIN_CONTACT_EMAIL?: string;
-    ADMIN_EMAILS?: string;
+    ADMIN_ACCESS_EMAILS?: string;
     APP_BASE_URL?: string;
     NEXT_PUBLIC_SITE_URL?: string;
     CUSTOM_DOMAIN?: string;

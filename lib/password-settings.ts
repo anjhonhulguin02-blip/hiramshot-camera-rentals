@@ -1,0 +1,1 @@
+export function passwordReady(settings:Record<string,string|undefined>){return settings.PASSWORD_AUTH_ENABLED==='true'&&settings.PASSWORD_HASHING_VERIFIED==='true'&&!!settings.AUTH_EMAIL_FROM&&!!settings.RESEND_API_KEY&&!!settings.TURNSTILE_SITE_KEY&&!!settings.TURNSTILE_SECRET_KEY;}

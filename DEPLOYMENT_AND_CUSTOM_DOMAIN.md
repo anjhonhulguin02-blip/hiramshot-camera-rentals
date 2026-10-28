@@ -10,7 +10,7 @@ Use native Sites runtime environment settings, not committed `.env` files. The t
 
 Set `APP_BASE_URL` to the chosen HTTPS canonical origin once the domain is verified. `NEXT_PUBLIC_SITE_URL` is an optional fallback; use the same origin if set. Set `CUSTOM_DOMAIN` to the canonical hostname without a scheme or path. All application API calls and sign-in return paths remain relative. Canonical, OpenGraph, robots, and sitemap URLs come from `lib/site.ts`.
 
-`ADMIN_CONTACT_EMAIL` is the public business email, currently `hiramshotcamerarentals@gmail.com`. `ADMIN_EMAILS` and `ADMIN_USER_IDS` are server-controlled access allowlists, separate from the contact address. The existing verified Site owner and the business email are configured for application administrator access. Additional administrators and staff are assigned through the protected account manager. Never create a default password or make a client-supplied role authoritative.
+`ADMIN_CONTACT_EMAIL` is the public business email, currently `hiramshotcamerarentals@gmail.com`. The native deployment now uses only the private `ADMIN_ACCESS_EMAILS` Worker secret for its three approved operator emails; older `ADMIN_EMAILS` / `ADMIN_USER_IDS` settings and contact addresses grant no native operator access. Verified identity, an active role and MFA are also required. Never create a default password or make a client-supplied role authoritative.
 
 ## Obtain exact DNS records
 

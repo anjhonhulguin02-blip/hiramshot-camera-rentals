@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import './reviews.css';
 import { siteUrl, indexable } from '../lib/site';
 export const dynamic = 'force-dynamic';
 export function generateMetadata(): Metadata { return {

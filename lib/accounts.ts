@@ -1,8 +1,7 @@
 import {validateEmergencyContacts} from './verification';
-import {DEFAULT_CONTACT_EMAIL} from './contact';
 import { env } from '@hiramshot/runtime';
 import type { ChatGPTUser } from '../app/chatgpt-auth';
-import { adminAllowed } from './rental';
+import {administratorEmail} from './admin-access';
 
 export type AccountRole = 'ADMIN' | 'STAFF' | 'CLIENT';
 export type AccountRow = {
@@ -13,7 +12,7 @@ export type AccountRow = {
   created_at: string; updated_at: string;
 };
 export function isConfiguredAdministrator(user: Pick<ChatGPTUser, 'userId' | 'email'>) {
-  return adminAllowed(user.userId, env.ADMIN_USER_IDS) || (env.ADMIN_EMAILS||'').split(',').map(s=>s.trim().toLowerCase()).includes(user.email.toLowerCase()) || user.email.toLowerCase() === (env.ADMIN_CONTACT_EMAIL || env.ADMIN_EMAIL || DEFAULT_CONTACT_EMAIL).toLowerCase();
+  return administratorEmail(user.email,env.ADMIN_ACCESS_EMAILS);
 }
 export class RegistrationRequiredError extends Error { constructor(){super('Complete your HiramShot registration and security challenge before booking.');} }
 export async function ensureAccount(user: ChatGPTUser): Promise<AccountRow> {

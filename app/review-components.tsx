@@ -1,0 +1,5 @@
+'use client';
+import {Star} from 'lucide-react';
+export type SharedReview={id:string;equipment_id:string;rating:number;body:string;display_name:string;status?:string;version?:number;booking_id?:string;moderation_reason?:string;created_at:string;media:{id:string;mime:string;url:string}[]};
+export function Stars({rating}:{rating:number}){return <span className="review-stars" role="img" aria-label={`${rating} out of 5 stars`}>{[1,2,3,4,5].map(value=><Star key={value} size={16} fill={value<=rating?'currentColor':'none'} aria-hidden="true"/>)}</span>;}
+export function ReviewMedia({media}:{media:SharedReview['media']}){return media.length?<div className="review-media">{media.map(item=>item.mime==='video/mp4'?<video key={item.id} controls playsInline preload="metadata" aria-label="Renter sample video" src={item.url}/>:<a href={item.url} target="_blank" rel="noreferrer" key={item.id} aria-label="Open renter sample photo"><img src={item.url} alt="Sample photo shared with the renter’s review" loading="lazy"/></a>)}</div>:null;}

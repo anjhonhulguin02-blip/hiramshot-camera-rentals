@@ -20,13 +20,13 @@ The application Worker retains CSP, HSTS on HTTPS, same-origin mutation checks, 
 
 ## Google sign-in setup
 
-Configured on 2026-10-28 in the business-owned Google Cloud project `hiramshot-camera-rentals`. The OAuth app remains External/Testing with the two approved owner accounts as test users. Its web client credentials are stored as Worker secrets, and business-account sign-in through the real Google callback has succeeded. No Google Cloud paid trial or billing upgrade was activated.
+Configured on 2026-10-28 in the business-owned Google Cloud project `hiramshot-camera-rentals`. Its web client credentials are Worker secrets, and real business-account sign-in succeeded. The app requests only OpenID/email/profile. Google's [basic identity exception](https://support.google.com/cloud/answer/15549945?hl=en) means the Google test-user list is not an access-control boundary for these scopes. The application's own private review gate and private administrator allowlist enforce access. No Google Cloud paid trial or billing upgrade was activated.
 
 Create a Google Cloud OAuth client of type **Web application** for HiramShot. Use only the provider's default OpenID/email/profile scopes, not Gmail access.
 
 - Authorized JavaScript origin: `https://hiramshot.com`
 - Authorized redirect URI: `https://hiramshot.com/api/auth/callback/google`
-- If the OAuth app is in Testing mode, add the two configured owner email addresses as test users.
+- Keep the current basic identity scopes. Additional scopes change Google's testing/verification requirements and require a separate review.
 - Configure `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` through the Worker's Variables and Secrets settings. Do not paste the secret into chat or commit it.
 - `AUTH_SECRET` is a separate application session key, initialized by the secure bootstrap helper. It is not the Google client secret.
 
@@ -36,13 +36,17 @@ The API routes pass the original web Request directly to Auth.js Core with the s
 
 ## Private review
 
-`REVIEW_MODE=true` admits application pages/APIs only for an authenticated Google principal whose email is in the configured administrator allowlist. Sign-in endpoints and static assets remain accessible. Forged identity headers do not satisfy this gate. Review mode fails closed if the session secret is missing.
+`REVIEW_MODE=true` admits application pages/APIs only for an authenticated, allowlisted principal. The three owner-approved administrator emails are stored in the private `ADMIN_ACCESS_EMAILS` Worker secret, outside source control. Contact emails, legacy identity-ID settings and stale database roles do not grant administrator access. The server checks the allowlist on every privileged request, as well as active profile, role and MFA. Sign-in/recovery endpoints and static assets remain accessible. Forged identity headers do not satisfy the gate. Review mode fails closed if session protection is missing; password sessions additionally require a current credential version.
 
 Owners can now enter the private review site through Google sign-in. Administrator MFA and role checks separately protect customer documents and administrative operations after sign-in. Keep `PUBLIC_INDEXING_ENABLED=false` during review.
 
 ## Booking and document intake
 
 Create a Cloudflare Turnstile Managed widget for `hiramshot.com`. Store `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` in Worker settings. Backend actions are `registration`, `booking`, `verification`, `upload` and `receipt`; each token must match its action and the hostname.
+
+Completed on 2026-10-28 with owner approval: **HiramShot website**, Managed mode, hiramshot.com, pre-clearance disabled. Both keys are Worker secrets. Additional prepared actions are `login`, `password_email`, `password_complete`, `review` and `review_upload`. Creating the widget does not enable KYC or bypass missing private scanning.
+
+Email/password setup and its disabled activation switches are documented in [EMAIL_SIGN_IN.md](EMAIL_SIGN_IN.md). Payment gateway preparation is in [PAYMENTS_SETUP.md](PAYMENTS_SETUP.md); online collection is not enabled without a merchant account and integration acceptance. Reviews, ratings and real-rental ranking are described in [REVIEWS.md](REVIEWS.md).
 
 Keep `KYC_ENABLED=false` until a private authenticated HTTPS malware scanner is configured and tested. The scanner must return `{"clean":true}` only after a successful scan. Store its URL/token as `MALWARE_SCANNER_URL` and `MALWARE_SCANNER_TOKEN`. Real IDs and billing documents stay in private R2, with metadata and encrypted personal fields in D1. Never use public multi-user malware submission services for these files.
 
