@@ -1,5 +1,13 @@
 # HiramShot verification record
 
+## White browser icon and authenticator QR — 2026-10-28
+
+- Browser metadata now uses a versioned white HiramShot monogram with the original orange accent on a dark badge, preserving the original logo silhouette. SVG, 32-pixel PNG and 180-pixel touch icon are served under the public asset namespace. Live responses, MIME types, dimensions and login icon metadata passed. Header/footer brand assets are preserved.
+- MFA enrollment renders its existing provisioned `otpauth://` URI locally as an SVG QR with a four-module quiet zone. The manual setup key remains available in a disclosure. No QR provider, remote QR image, local storage or new credential endpoint is used. Pending secret/URI state is cleared after successful confirmation; existing backend owner checks, expiry, encrypted storage and six-digit confirmation remain in force.
+- Eleven component checks passed, including independently decoding rendered QR images for synthetic short and long account labels back to the exact provisioned URI and rejecting mismatched settings. TypeScript, native build and production dependency audit passed (zero reported production advisories at check time). Deployed HTTPS/OAuth/security checks also passed.
+- Desktop and 375-pixel phone previews used only the public RFC test key and had no horizontal overflow. No real administrator MFA was enrolled, reset, scanned or confirmed by the agent. Owners must reload the admin page, begin their own enrollment and scan their private QR; enabled authenticators remain enrolled.
+- Implementation references: [QR encoder API](https://github.com/kazuhikoarase/qrcode-generator/blob/master/js/README.md), [Google Authenticator key URI format](https://github.com/google/google-authenticator/wiki/Key-Uri-Format).
+
 ## Login, verified reviews and private operator access — 2026-10-28
 
 This is the current native deployment record; earlier sections retain historical setup states.
