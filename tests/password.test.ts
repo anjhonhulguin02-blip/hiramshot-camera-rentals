@@ -5,7 +5,7 @@ import {passwordReady} from '../lib/password-settings';
 import {boundedAuthRequest} from '../lib/auth-request';
 import {administratorEmail} from '../lib/admin-access';
 test('password hashing uses unique salts and rejects incorrect or malformed hashes',async()=>{
- const value='SYNTHETIC only passphrase 3245';const first=await hashPassword(value),second=await hashPassword(value);
+ const value='Z7!q2M8#r4';assert.equal(value.length,10);const first=await hashPassword(value),second=await hashPassword(value);
  assert.notEqual(first,second);assert.match(first,/^scrypt\$32768\$8\$3\$/);assert.ok(!first.includes(value));
  assert.equal(await verifyPassword(value,first),true);assert.equal(await verifyPassword(value+'!',first),false);
  assert.equal(await verifyPassword(value,first.replace('$32768$','$1$')),false);assert.equal(await verifyPassword('x'.repeat(600),first),false);
@@ -14,7 +14,8 @@ test('email and passphrase validation preserve passwords without arbitrary compo
  assert.equal(normalizeLoginEmail(' Owner@Example.COM '),'owner@example.com');
  assert.equal(normalizeLoginEmail('Customer@Yahoo.com'),'customer@yahoo.com');assert.equal(normalizeLoginEmail('Customer@Outlook.com'),'customer@outlook.com');
  for(const value of ['bad','a@b','a\n@example.com',null])assert.throws(()=>normalizeLoginEmail(value));
- for(const value of ['short','a'.repeat(20),'password12345678','a'.repeat(129),null])assert.throws(()=>validatePassword(value));
+ for(const value of ['short','Ab7!xy2?Z','a'.repeat(20),'password123','1234567890','qwertyuiop','password12345678','a'.repeat(129),null])assert.throws(()=>validatePassword(value));
+ assert.equal(validatePassword('Z7!q2M8#r4'),'Z7!q2M8#r4');
  assert.equal(validatePassword('  spaces are supported  '),'  spaces are supported  ');
 });
 test('reset tokens have 256 bits of randomness and only their digest is stored',()=>{

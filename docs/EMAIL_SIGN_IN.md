@@ -21,7 +21,7 @@ A production native Worker probe passed synthetic valid/wrong password checks an
 
 ## Storage and access protections
 
-- D1 stores scrypt hashes, not plaintext or reversibly encrypted passwords: N=32768, r=8, p=3, random 16-byte salt, constant-time verification, 15–128 character passwords.
+- D1 stores scrypt hashes, not plaintext or reversibly encrypted passwords: N=32768, r=8, p=3, random 16-byte salt, constant-time verification, 10–128 character passwords (owner-requested minimum updated 2026-10-29). Common predictable passwords remain rejected.
 - Verification/reset links use random 256-bit tokens. Only token hashes are stored. The URL fragment is removed on load; only an explicit POST consumes a token. Email-scanner GETs cannot change a password.
 - Token consumption and credential-version updates use D1 batch/compare-and-swap guards. Replays/stale tokens fail. Password changes invalidate older password sessions.
 - Writes enforce same origin, bounded bodies, Turnstile hostname/action and rolling quotas. Unknown/ineligible addresses receive a generic response to limit account enumeration.
