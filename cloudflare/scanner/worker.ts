@@ -1,12 +1,27 @@
-import {Container,getContainer} from '@cloudflare/containers';
+import {DurableObject} from 'cloudflare:workers';
 type ScannerEnv={SCANNER_INSTANCE:DurableObjectNamespace<ClamScanner>;MALWARE_SCANNER_TOKEN:string};
-export class ClamScanner extends Container<ScannerEnv>{
- defaultPort=8080;
- sleepAfter='5m';
- // Only engine signature updates require outbound access. No file is sent outside this container.
- enableInternet=true;
- envVars={SCANNER_TOKEN:this.env.MALWARE_SCANNER_TOKEN};
- override onError(){return undefined;} // No request bodies, tokens or file details in logs.
+export class ClamScanner extends DurableObject<ScannerEnv>{
+ async fetch(request:Request){
+  if(!await authenticated(request,this.env.MALWARE_SCANNER_TOKEN))return new Response('Unauthorized',{status:401});
+  const container=this.ctx.container;
+  if(!container)return Response.json({error:'Private scanner is not provisioned.'},{status:503});
+  try{
+   await this.ctx.blockConcurrencyWhile(async()=>{
+    const image=container.images.engine;
+    if(await this.ctx.storage.get('configuredImage')!==image){if(container.running)await container.destroy();await this.ctx.storage.put('configuredImage',image);}
+    await this.ctx.storage.put('lastActivity',Date.now());await this.ctx.storage.setAlarm(Date.now()+300000);
+    // Only one fixed Durable Object is selected by the Worker. No caller-controlled instance names.
+    if(!container.running){container.start({image,instance:'standard-1',enableInternet:true,env:{SCANNER_TOKEN:this.env.MALWARE_SCANNER_TOKEN}});this.ctx.waitUntil(container.monitor().catch(async()=>{await container.destroy();}));}
+   });
+   return await container.getTcpPort(8080).fetch(request);
+  }catch{return Response.json({error:'Scanner warming up or unavailable. Retry in one minute.'},{status:503});}
+ }
+
+ async alarm(){
+  const last=await this.ctx.storage.get<number>('lastActivity')||0;
+  if(Date.now()<last+300000){await this.ctx.storage.setAlarm(last+300000);return;}
+  if(this.ctx.container?.running)await this.ctx.container.destroy();
+ }
 }
 async function authenticated(request:Request,secret:string){
  if(!secret||secret.length<32)return false;
@@ -29,6 +44,6 @@ export default {async fetch(request:Request,env:ScannerEnv){
    headers.set('Content-Type','application/octet-stream');headers.set('Content-Length',String(size));
   }
   // One fixed instance: caller-controlled names cannot create unbounded billable instances.
-  return await getContainer(env.SCANNER_INSTANCE,'kyc-private').fetch(new Request('http://container'+path,{method:request.method,headers,body:body as BodyInit|undefined,signal:AbortSignal.timeout(18000)}));
+  return await env.SCANNER_INSTANCE.get(env.SCANNER_INSTANCE.idFromName('kyc-private')).fetch(new Request('http://container'+path,{method:request.method,headers,body:body as BodyInit|undefined,signal:AbortSignal.timeout(18000)}));
  }catch{return deny(503,'Scanner warming up or unavailable. Retry in one minute.');}
 }};

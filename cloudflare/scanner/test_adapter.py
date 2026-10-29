@@ -25,6 +25,15 @@ class Socket:
 
 
 class AdapterTests(unittest.TestCase):
+    def test_binding_does_not_resolve_a_container_hostname(self):
+        with patch('socket.getfqdn', side_effect=UnicodeError('synthetic long container hostname')):
+            server = scanner.PrivateHTTPServer(('127.0.0.1', 0), scanner.Handler)
+            try:
+                self.assertEqual(server.server_name, 'private-scanner')
+                self.assertGreater(server.server_port, 0)
+            finally:
+                server.server_close()
+
     def test_version_must_have_recent_signatures(self):
         for age, accepted in [(60, True), (49 * 3600, False)]:
             version = ('ClamAV 1.4.3/12345/' + time.strftime('%a %b %d %H:%M:%S %Y', time.gmtime(time.time() - age)) + '\0').encode()

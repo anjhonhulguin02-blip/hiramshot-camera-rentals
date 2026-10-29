@@ -47,6 +47,8 @@ service-account*.json
 
 # OS metadata
 .DS_Store
+__pycache__/
+*.pyc
 
 # Vercel account/project state
 /.vercel/

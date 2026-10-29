@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {encode} from 'next-auth/jwt';
-import {canReview,reviewOwner,publicReviewPath} from '../lib/review-access';
+import {canReview,reviewDecision,reviewOwner,publicReviewPath} from '../lib/review-access';
 import {withRequestSecurity,requestSecurity} from '../lib/request-security';
 const secret='SYNTHETIC-TEST-SECRET-NEVER-USED-IN-PRODUCTION';
 test('private review accepts only an authenticated allowlisted Google principal',async()=>{
@@ -10,6 +10,7 @@ test('private review accepts only an authenticated allowlisted Google principal'
   const url=(secure?'https':'http')+'://example.invalid/account',request=new Request(url,{headers:{Cookie:name+'='+token}});
   assert.equal(await canReview(request,secret,'owner@example.invalid'),true);
   assert.equal(await canReview(request,secret,'other@example.invalid'),false);
+  assert.equal(await reviewDecision(request,secret,'other@example.invalid'),'review-only','a signed-in client gets a stable review screen instead of another sign-in');
   assert.equal(await canReview(request,secret+'wrong','owner@example.invalid'),false);
  }
  const forged=new Request('https://example.invalid',{headers:{'oai-authenticated-user-id':'owner','oai-authenticated-user-email':'owner@example.invalid'}});
@@ -17,7 +18,7 @@ test('private review accepts only an authenticated allowlisted Google principal'
  assert.equal(reviewOwner({principal:'sites:123',email:'owner@example.invalid'},'owner@example.invalid'),false);
 });
 test('review exposes only login handlers and static assets before authentication',()=>{
- for(const path of ['/login','/logout','/api/auth/callback/google','/assets/logo.png','/_next/static/a.js'])assert.equal(publicReviewPath(path),true);
+ for(const path of ['/login','/logout','/review-access','/api/auth/callback/google','/assets/logo.png','/_next/static/a.js'])assert.equal(publicReviewPath(path),true);
  for(const path of ['/','/account','/admin','/api/account','/api/documents/x','/api/authentication','/login-as-owner'])assert.equal(publicReviewPath(path),false);
 });
 test('trusted ingress context stays isolated across concurrent requests',async()=>{

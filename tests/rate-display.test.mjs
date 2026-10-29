@@ -17,25 +17,13 @@ test('cinematic booking links retain selected dates and the film viewer respects
  const inactive=render(GearJourney,{catalog:INITIAL_CATALOG.map(gear=>({...gear,active:gear.id==='x5'})),paused:true,onPrices:()=>{}});
  assert.ok(inactive.includes('/book?gear=x5'));assert.ok(!inactive.includes('/book?gear=x6'));assert.ok(!inactive.includes('/book?gear=neo2'));
 });
-test('compact catalog cards keep the correct rate and provide a View prices dialog trigger',()=>{
- const html=render(Storefront,{user:null});
- const cards=[...html.matchAll(/<article class="gear-card"[^>]*>([\s\S]*?)<\/article>/g)].map(m=>m[1]);
- assert.equal(cards.length,3);
- for(const [index,name,rate,deposit]of [[0,'Insta360 X5',650,2000],[1,'Insta360 X6',800,3000],[2,'DJI Neo 2',500,1500]]){
-  assert.ok(cards[index].includes(`<h3>${name}</h3>`));
-  const primary=cards[index].slice(cards[index].indexOf('<div class="gear-bottom">'));
-  assert.ok(primary.includes(`<strong>₱${rate}/day</strong>`),name+' default rate');
-  assert.ok(primary.includes('Standard · 1–2 days'),name+' duration disclosure');
-  assert.ok(primary.includes('Refundable deposit: ₱'+deposit.toLocaleString('en-PH')));
-  assert.ok(!primary.includes('From ₱'));
- }
- for(const card of cards){
-  assert.ok(card.includes('aria-haspopup="dialog"'));
-  assert.ok(card.includes('>View prices '));
-  assert.ok(!card.includes('class="rate-schedule"'),'Full pricing should stay outside the collapsed card');
- }
-
+test('one animated showcase exposes exact prices, deposits and pricing dialogs for every package',()=>{
+ const html=render(Storefront,{user:null});assert.ok(!html.includes('class="gear-card"'));assert.ok(html.includes('id="gear"'));assert.ok(html.includes('id="in-motion"'));
+ for(const [id,rate,deposit]of [['x5',650,1000],['x6',800,1500],['neo2',500,800]]){const chapter=html.slice(html.indexOf('id="perspective-'+id+'"')).split('</article>')[0];assert.ok(chapter.includes('₱'+rate+'/day'));assert.ok(chapter.includes('Refundable deposit: ₱'+deposit.toLocaleString('en-PH')));assert.ok(chapter.includes('aria-haspopup="dialog"'));}
+ const drone=html.slice(html.indexOf('id="perspective-neo2"')).split('</article>')[0];assert.ok(drone.includes('Fly More Combo'));assert.ok(drone.includes('₱700/day'));
+ const sixDays=render(GearJourney,{catalog:INITIAL_CATALOG,paused:true,days:6,onPrices:()=>{}});for(const rate of [550,700,450,600])assert.ok(sixDays.includes('₱'+rate+'/day'));
 });
+
 test('selected duration highlights the applicable tier for every package',()=>{
  for(const [id,variant,days,rate]of [['x5','Standard',1,650],['x5','Standard',3,550],['x5','Standard',7,450],['x6','Standard',1,800],['x6','Standard',3,700],['x6','Standard',7,600],['neo2','Standard',1,500],['neo2','Standard',3,450],['neo2','Standard',7,350],['neo2','Fly More Combo',1,700],['neo2','Fly More Combo',3,600],['neo2','Fly More Combo',7,500]]){
   const html=render(RateSchedule,{equipment:INITIAL_CATALOG.find(g=>g.id===id),variantName:variant,days});

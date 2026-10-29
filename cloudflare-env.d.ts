@@ -7,6 +7,9 @@ declare namespace Cloudflare {
     PASSWORD_AUTH_ENABLED?: string;
     PASSWORD_HASHING_VERIFIED?: string;
     AUTH_EMAIL_FROM?: string;
+    AUTH_EMAIL_PROVIDER?: string;
+    AUTH_EMAIL_DOMAIN_VERIFIED?: string;
+    AUTH_EMAIL?: {send(message:{to:string;from:{email:string;name:string};subject:string;text:string;replyTo?:string}):Promise<{messageId:string}>};
     RESEND_API_KEY?: string;
     REVIEW_MEDIA_ENABLED?: string;
     REVIEW_MEDIA_PROCESSOR_URL?: string;
@@ -29,6 +32,7 @@ declare namespace Cloudflare {
     MALWARE_SCANNER_URL?: string;
     MALWARE_SCANNER?: Fetcher;
     MALWARE_SCANNER_TOKEN?: string;
+    PAYMENT_QR_SETTINGS?: string;
     PURGE_SECRET?: string;
     KYC_RETENTION_DAYS?: string;
     ADMIN_CONTACT_EMAIL?: string;

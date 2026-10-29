@@ -57,6 +57,13 @@
       "when": 1793141751754,
       "tag": "0007_verified_rental_reviews",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1793230231697,
+      "tag": "0008_lower_security_deposits",
+      "breakpoints": true
     }
   ]
 }

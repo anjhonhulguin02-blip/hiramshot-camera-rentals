@@ -5,6 +5,7 @@ import hmac
 import json
 import os
 import socket
+from socketserver import TCPServer
 import struct
 import threading
 import time
@@ -131,7 +132,15 @@ class Handler(BaseHTTPRequestHandler):
             SLOTS.release()
 
 
+class PrivateHTTPServer(ThreadingHTTPServer):
+    def server_bind(self):
+        # Container host identifiers may exceed the DNS label limit. Binding does not require reverse DNS.
+        TCPServer.server_bind(self)
+        self.server_name = 'private-scanner'
+        self.server_port = self.server_address[1]
+
+
 if __name__ == '__main__':
     if len(os.environ.get('SCANNER_TOKEN', '')) < 32:
         raise SystemExit('Private scanner token must be configured')
-    ThreadingHTTPServer(('0.0.0.0', 8080), Handler).serve_forever()
+    PrivateHTTPServer(('0.0.0.0', 8080), Handler).serve_forever()

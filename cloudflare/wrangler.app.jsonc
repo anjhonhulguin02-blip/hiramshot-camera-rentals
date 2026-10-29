@@ -7,9 +7,12 @@
   "compatibility_flags":["nodejs_compat","nodejs_compat_populate_process_env"],
   "workers_dev":false,
   "preview_urls":false,
+  "limits":{"cpu_ms":5000},
   "assets":{"binding":"ASSETS","run_worker_first":true},
   "d1_databases":[{"binding":"DB","database_name":"hiramshot-rentals","database_id":"ab0de7af-694a-4e89-b72f-ce04af192e7b","migrations_dir":"../drizzle"}],
   "r2_buckets":[{"binding":"BUCKET","bucket_name":"hiramshot-private"}],
+  "services":[{"binding":"MALWARE_SCANNER","service":"hiramshot-private-scanner"}],
+  "send_email":[{"name":"AUTH_EMAIL","allowed_sender_addresses":["accounts@hiramshot.com"]}],
   "routes":[{"pattern":"hiramshot.com","custom_domain":true},{"pattern":"www.hiramshot.com","custom_domain":true}],
   "triggers":{"crons":["0 * * * *"]},
   "vars":{
@@ -23,8 +26,11 @@
     "PUBLIC_INDEXING_ENABLED":"false",
     "KYC_ENABLED":"false",
     "KYC_RETENTION_DAYS":"7",
-    "PASSWORD_AUTH_ENABLED":"false",
-    "PASSWORD_HASHING_VERIFIED":"false",
+    "PASSWORD_AUTH_ENABLED":"true",
+    "PASSWORD_HASHING_VERIFIED":"true",
+    "AUTH_EMAIL_PROVIDER":"cloudflare",
+    "AUTH_EMAIL_DOMAIN_VERIFIED":"true",
+    "AUTH_EMAIL_FROM":"accounts@hiramshot.com",
     "REVIEW_MEDIA_ENABLED":"false"
   }
 }

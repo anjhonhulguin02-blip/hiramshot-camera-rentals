@@ -3,11 +3,11 @@
   "name":"hiramshot-private-scanner",
   "main":"worker.ts",
   "account_id":"9df1c2820d183ae678d9f1a7ba7177b1",
-  "compatibility_date":"2026-05-15",
+  "compatibility_date":"2026-10-28",
   "workers_dev":false,
   "preview_urls":false,
   "observability":{"enabled":false},
-  "containers":[{"class_name":"ClamScanner","image":"./Dockerfile","max_instances":1,"instance_type":"standard-1"}],
+  "containers":[{"class_name":"ClamScanner","scheduling_policy":"durable_object","images":{"engine":{"dockerfile":"./Dockerfile"}}}],
   "durable_objects":{"bindings":[{"name":"SCANNER_INSTANCE","class_name":"ClamScanner"}]},
   "migrations":[{"tag":"v1","new_sqlite_classes":["ClamScanner"]}]
 }

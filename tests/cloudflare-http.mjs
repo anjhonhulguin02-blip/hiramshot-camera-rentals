@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 const base=process.env.TEST_BASE_URL||'https://hiramshot.com';
 const host=process.env.TEST_HOST||'hiramshot.com';
 const googleConfigured=process.env.TEST_GOOGLE_CONFIGURED==='true';
+const passwordConfigured=process.env.TEST_PASSWORD_CONFIGURED==='true';
 let loginHtml='';
 for(const [path,status,extra]of [['/',303,{}],['/account',303,{}],['/admin',303,{}],['/api/bookings',401,{}],['/api/account',401,{}],['/api/documents/00000000-0000-4000-8000-000000000001',401,{}],['/api/bookings',401,{'oai-authenticated-user-id':'forged','oai-authenticated-user-email':'anjhon.hulguin02@gmail.com'}],['/login',200,{}],['/api/auth/providers',googleConfigured?200:503,{}],['/assets/logo.png',200,{}]]){
  const response=await fetch(base+path,{redirect:'manual',headers:{Host:host,...extra}}),body=response.headers.get('content-type')?.startsWith('image/')?'':await response.text();assert.equal(response.status,status,path+': '+body.slice(0,200));
@@ -23,14 +24,15 @@ await Promise.all(assets.map(async path=>{
 }));
 console.log('PASS',assets.length,'referenced CSS/JavaScript assets');
 for(const path of ['/forgot-password','/create-account','/reset-password','/verify-email']){
- const response=await fetch(base+path,{redirect:'manual'});assert.equal(response.status,200,path);assert.ok((await response.text()).includes('Email sign-in is being prepared.'));console.log('PASS recovery/setup page',path);
+ const response=await fetch(base+path,{redirect:'manual'});assert.equal(response.status,200,path);const html=await response.text();assert.ok(!html.includes('temporarily unavailable'));if(!passwordConfigured){assert.ok(html.includes('Continue with Google'));assert.ok(!html.includes('type="password"'));}else if(path==='/create-account'||path==='/forgot-password'){assert.ok(html.includes('type="email"'));}else assert.ok(html.includes('type="password"'));console.log('PASS recovery/setup page',path);
 }
-for(const path of ['/api/admin/reviews','/api/admin/documents/00000000-0000-4000-8000-000000000001/preview','/api/account/reviews','/api/reviews'])assert.equal((await fetch(base+path,{redirect:'manual'})).status,401,path);
+for(const path of ['/api/bookings/00000000-0000-4000-8000-000000000001/payment-qr','/api/bookings/00000000-0000-4000-8000-000000000001/payment-instructions','/api/admin/reviews','/api/admin/documents/00000000-0000-4000-8000-000000000001/preview','/api/account/reviews','/api/reviews'])assert.equal((await fetch(base+path,{redirect:'manual'})).status,401,path);
 for(const path of ['/api/password/request','/api/password/complete']){
- const response=await fetch(base+path,{method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:'{}'});assert.equal(response.status,503,path+' must remain disabled before email setup');
+ const response=await fetch(base+path,{method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:'{}'});assert.equal(response.status,passwordConfigured?400:503,path+' must reject incomplete or unconfigured requests');
  const cross=await fetch(base+path,{method:'POST',headers:{Origin:'https://attacker.invalid','Content-Type':'application/json'},body:'{}'});assert.equal(cross.status,403,path+' rejects cross-origin writes');
 }
-console.log('PASS private review API protection and disabled email setup endpoints');
+if(passwordConfigured){assert.ok(loginHtml.includes('Forgot password?'));assert.ok(loginHtml.includes('type="password"'));const challenge=await fetch(base+'/api/password/request',{method:'POST',headers:{Origin:base,'Content-Type':'application/json'},body:JSON.stringify({mode:'reset',email:'synthetic@example.invalid'})});assert.equal(challenge.status,400,'email requests require a real security challenge');}
+console.log('PASS private review API protection and email endpoint security gates');
 if(googleConfigured){
  const csrfResponse=await fetch(base+'/api/auth/csrf',{headers:{Host:host}}),{csrfToken}=await csrfResponse.json();
  assert.ok(csrfToken,'CSRF token required');
