@@ -10,7 +10,7 @@ The owner chose Cloudflare Workers hosting instead of Vercel after the account w
 - Identity: Google OpenID Connect through Auth.js, verified email required. No incoming Sites identity header establishes a user on this host.
 - Internal account UUIDs, booking quote snapshots, KYC guards, audit and ledger constraints remain in the existing schema. New owner bootstrap profiles contain no password and can only be claimed by the matching verified identity. Existing linked identities are never silently merged into another provider subject.
 
-All six current SQL migrations were applied to the new database. The real D1 HTTP transaction and account/IP quota probes passed using temporary synthetic records, which were removed. No real customer identity files were moved from the old review deployment. The original Sites deployment remains a separate recovery snapshot.
+Migrations 0000–0008 have been applied to the native database. Migration 0008 changes catalog/inventory deposits without rewriting existing booking or financial snapshots. The real D1 HTTP transaction and account/IP quota probes passed using temporary synthetic records, which were removed. No real customer identity files were moved from the old review deployment. The original Sites deployment remains a separate recovery snapshot.
 
 ## Build and deploy
 
@@ -38,7 +38,7 @@ The API routes pass the original web Request directly to Auth.js Core with the s
 
 `REVIEW_MODE=true` admits application pages/APIs only for an authenticated, allowlisted principal. The three owner-approved administrator emails are stored in the private `ADMIN_ACCESS_EMAILS` Worker secret, outside source control. Contact emails, legacy identity-ID settings and stale database roles do not grant administrator access. The server checks the allowlist on every privileged request, as well as active profile, role and MFA. Sign-in/recovery endpoints and static assets remain accessible. Forged identity headers do not satisfy the gate. Review mode fails closed if session protection is missing; password sessions additionally require a current credential version.
 
-Owners can now enter the private review site through Google sign-in. Administrator MFA and role checks separately protect customer documents and administrative operations after sign-in. Keep `PUBLIC_INDEXING_ENABLED=false` during review.
+The historical private review gate remains available for recovery; it is currently disabled for public client access. Google sign-in no longer sends ordinary clients to the review-access screen. Administrator MFA and role checks separately protect customer documents and administrative operations after sign-in. Keep `PUBLIC_INDEXING_ENABLED=false` during review.
 
 ## Booking and document intake
 
@@ -46,9 +46,9 @@ Create a Cloudflare Turnstile Managed widget for `hiramshot.com`. Store `TURNSTI
 
 Completed on 2026-10-28 with owner approval: **HiramShot website**, Managed mode, hiramshot.com, pre-clearance disabled. Both keys are Worker secrets. Additional prepared actions are `login`, `password_email`, `password_complete`, `review` and `review_upload`. Creating the widget does not enable KYC or bypass missing private scanning.
 
-Email/password setup and its disabled activation switches are documented in [EMAIL_SIGN_IN.md](EMAIL_SIGN_IN.md). Payment gateway preparation is in [PAYMENTS_SETUP.md](PAYMENTS_SETUP.md); online collection is not enabled without a merchant account and integration acceptance. Reviews, ratings and real-rental ranking are described in [REVIEWS.md](REVIEWS.md).
+Email/password is enabled through native Cloudflare Email Service; see [EMAIL_SIGN_IN.md](EMAIL_SIGN_IN.md). The official static QR is privately configured with manual receipt confirmation; an automatic gateway still requires merchant onboarding. See [PAYMENTS_SETUP.md](PAYMENTS_SETUP.md). Reviews, ratings and real-rental ranking are described in [REVIEWS.md](REVIEWS.md).
 
-Keep `KYC_ENABLED=false` until a private authenticated HTTPS malware scanner is configured and tested. The scanner must return `{"clean":true}` only after a successful scan. Store its URL/token as `MALWARE_SCANNER_URL` and `MALWARE_SCANNER_TOKEN`. Real IDs and billing documents stay in private R2, with metadata and encrypted personal fields in D1. Never use public multi-user malware submission services for these files.
+The deployed private `MALWARE_SCANNER` service binding passed real ClamAV clean/EICAR/unauthenticated acceptance and exact-byte hash checks; KYC intake is now enabled. The shared bearer token is a private Worker secret. See [PRIVATE_SCANNER.md](PRIVATE_SCANNER.md). Scanner failures must reject uploads and never return a fabricated clean result. Real IDs and billing documents stay in private R2, with metadata and encrypted personal fields in D1. Never use public multi-user malware submission services for these files.
 
 The native Cloudflare upload limit remains 5 MB. The optional Vercel adapter advertises 4 MB to remain below that platform's request-body limit. All five distinct clean file kinds, administrator review, live physical-ID verification, emergency contact separation and first-rental pickup/meetup rules remain mandatory.
 
@@ -56,6 +56,6 @@ The native Cloudflare upload limit remains 5 MB. The optional Vercel adapter adv
 
 The native Worker has an hourly Cron Trigger. It calls the retention function directly; no additional public maintenance ingress is introduced. Eligible verification files are due seven calendar days after clearance, and an hourly schedule can delete them within the next hourly run. Verify a synthetic eligible record and object before describing unattended deletion as proven operational. Account profiles, receipts and contract/financial retention remain separate policies.
 
-The current staging configuration does not upgrade billing automatically. Cloudflare Workers Free has CPU limits that may be too small for PDF generation; verify paid-plan suitability and a spend limit before the business launch. Workers Paid starts at US$5/month plus additional applicable usage; R2 and D1 retain their own usage allowances and charges.
+The owner upgraded Workers Paid and approved scanner activation. Native scrypt round-trip/concurrent probes and real private scanner acceptance passed; review usage and billing alerts. Workers Paid starts at US$5/month plus additional applicable usage; R2 and D1 retain their own usage allowances and charges.
 
-Before opening customer intake, complete Google login, owner MFA, Turnstile, private scan, upload/review, payment confirmation, exact-time reservation, contract, turnover, return/refund and scheduled-purge acceptance checks. Then deliberately set `REVIEW_MODE=false` for the public launch. Preserve noindex on account/admin/API routes even when the storefront becomes public.
+Current launch flags are REVIEW_MODE=false, KYC_ENABLED=true and PASSWORD_AUTH_ENABLED=true. Owner testing of email/password recovery and the complete upload/review/payment/contract/turnover/return/refund lifecycle remains outstanding, as does synthetic unattended purge readback. Preserve noindex on account/admin/API routes even when the storefront becomes public.

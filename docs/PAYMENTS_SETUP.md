@@ -1,6 +1,14 @@
-# GCash and QR Ph gateway preparation
+# GCash QR collection and optional gateway
 
-The owner has no merchant account yet and asked to prepare the setup. Live online collection is **not enabled**. No recipient QR, bank account or payment success has been invented. The booking submission security challenge is separate from payment processing.
+Updated 2026-10-29. The owner supplied the official static GCash/InstaPay QR. A metadata-stripped copy is stored in private R2, with its object key, MIME and SHA-256 in the private PAYMENT_QR_SETTINGS Worker secret. Neither the image nor its payment payload belongs in GitHub. No merchant gateway or automatic payment confirmation is enabled.
+
+An eligible booking owner can view/save the QR and exact outstanding reservation amount after identity/live-call approval. The endpoint checks sign-in, active profile, ownership, booking state and the outstanding ledger amount. Bytes are hash-checked, served with no-store/nosniff/same-origin headers, and access is audited. Anonymous and unrelated clients cannot retrieve it.
+
+On a phone, save the QR and select it from GCash Scan QR's gallery, or scan it from another screen using GCash/a compatible InstaPay app. Check the masked recipient and enter the exact displayed amount/reference. A static QR is not an HTTPS redirect or proof of payment. Submit a receipt through the scanned private upload flow; the administrator checks actual funds and records payment. Opening the QR, uploading a receipt or returning to the site never marks a booking paid. No payment was made during implementation.
+
+## Optional automatic gateway
+
+The owner has no merchant account yet. The prepared gateway below still requires provider onboarding, credentials and integration acceptance before activation.
 
 Use PayMongo Hosted Checkout for GCash and dynamic QR Ph, which participating InstaPay bank/e-wallet apps can scan. The current provider documentation uses `POST /v2/checkout_sessions`. See the [quick start](https://docs.paymongo.com/docs/payment-channels-hosted-checkout-quick-start), [QR Ph guide](https://docs.paymongo.com/docs/payment-acceptance-qr-ph) and [webhook verification](https://docs.paymongo.com/docs/developer-tools-webhook-setup-management).
 

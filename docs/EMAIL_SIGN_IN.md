@@ -1,23 +1,30 @@
-# Email/password setup
+# Email/password and Google sign-in
 
-Google sign-in works on hiramshot.com. The owner asked to prepare manual email/password, show/hide password and recovery while there is no transactional email account. Apple sign-in was deferred after confirming the Apple Developer Program has an annual membership fee.
+Updated 2026-10-29. Email/password is enabled on hiramshot.com alongside Google. Email accounts can use Gmail, Yahoo, Outlook or another valid provider. Apple sign-in remains deferred. The native Cloudflare Email Service sends from `accounts@hiramshot.com`, with the business Gmail as reply-to. No Resend account, SMTP password or additional email API key is required by this deployment.
 
-The UI now provides login, create-account email verification, forgot password, new-password confirmation and show/hide controls. Email/password stays disabled until the external setup below is complete. No email was actually sent during implementation.
+## Customer steps
 
-## Storage and validation
+1. For a new email/password account, open `/create-account`, enter a name and email, accept the displayed privacy consent and complete the security check, then choose **Send verification link**.
+2. Open the HiramShot message from `accounts@hiramshot.com`, checking Spam/Junk if needed. Follow its link and choose/confirm a password on the website. Verification links expire after 30 minutes; request a new one if expired.
+3. Use that email and password at `/login`. Show/hide password and password-manager paste are supported. **Forgot password?** sends a reset link valid for 15 minutes.
+4. Existing Google users should sign in with Google and choose **Set up email sign-in** in their portal to add a password to the same account. The email must match. Identities are not silently merged.
 
-- D1 contains password hashes, not plaintext or reversibly encrypted passwords. The native Node crypto implementation uses scrypt N=32768, r=8, p=3, 16 random salt bytes and constant-time verification. This is one of [OWASP's documented configurations](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html).
-- New accounts prove email ownership before choosing a password. Verification links expire in 30 minutes; reset links in 15 minutes. Only a SHA-256 digest of a random 256-bit token is stored. The link token stays in the URL fragment, is removed from browser history on load, and is consumed only by an explicit POST, never by an email scanner's GET.
-- Token consumption and credential/version update use one D1 batch and compare-and-swap guards. Replays and stale tokens fail; completed password changes invalidate earlier password sessions, including the private review gate. Google sessions remain governed by Google authentication and the application session lifetime.
-- API writes require same origin, bounded request bodies, CAPTCHA and account/IP quotas. Unknown or ineligible email addresses get the same generic response. Email delivery runs after that response so provider latency is not an account-existence signal.
-- Existing Google renters must first sign in with Google, then choose **Set up email sign-in** from their portal and verify the same email. Another provider identity is never silently substituted for their rental history. New email users complete the existing emergency-contact registration before booking.
+**Continue with Google** already proves email ownership through Google's verified identity. Google's “Keep track of your Google Account data” email is a sign-in notice, not a HiramShot verification link. Identity-document approval is a separate five-document and live-call process.
 
-## Required activation
+## Configuration and acceptance
 
-1. Create a business-owned Resend account and verify the sending domain's DNS records. Use an address such as `accounts@hiramshot.com`; the existing Gmail address remains the reply-to/contact address. Follow [Resend's domain and email documentation](https://resend.com/docs/dashboard/domains/introduction).
-2. Store `RESEND_API_KEY` as a Worker secret and set `AUTH_EMAIL_FROM` to the verified address. No real values belong in this repository.
-3. Turnstile is configured for hiramshot.com. Actions for this feature are `login`, `password_email` and `password_complete`; the backend validates both hostname and action.
-4. Benchmark password hashing under the intended production Worker plan and verify concurrent-load/resource limits. A synthetic local workerd round trip passed (approximately 246 ms hashing, 448 ms including verification on this workstation). This is not a measurement of production CPU accounting. Do not weaken the work factor to fit a Free CPU limit or enable it on an unsuitable plan. No paid plan was activated.
-5. Test actual email delivery, repeated/expired links, wrong passwords, rate limits, password-manager/paste support, reset session revocation and linked-owner access. Only then set `PASSWORD_HASHING_VERIFIED=true` and `PASSWORD_AUTH_ENABLED=true` and redeploy. These switches remain false today.
+The sending domain's bounce MX, SPF, DKIM and DMARC records are configured. Cloudflare reports Sending Enabled / DNS Configured. A native-binding test to the business inbox was accepted and its activity log showed Delivered. Email body/preview retention is disabled so verification/reset links are not retained as previews.
 
-The owner-approved three-email administrator allowlist is stored in the private Worker secret ADMIN_ACCESS_EMAILS, outside GitHub. Verified sign-in, an active matching profile, the server allowlist and administrator MFA are all required. A contact address, stale database role or incoming identity header grants no operator access.
+The app has `AUTH_EMAIL` restricted to sender `accounts@hiramshot.com`, `AUTH_EMAIL_PROVIDER=cloudflare`, a verified sender-domain flag, and enabled password/hash verification flags. Readiness also requires the actual binding and Turnstile credentials; flags alone cannot activate an absent sender. The previous Resend adapter remains an optional fallback, not the active provider. The app limits outbound requests globally and per account/IP.
+
+A production native Worker probe passed synthetic valid/wrong password checks and two concurrent round trips under the configured CPU limit. This is not a CPU-accounting benchmark. Automated token expiry, purpose, replay and credential-version tests passed. The owner must still complete the human create-email-link/password/sign-in/forgot-password sequence; the agent has not entered or changed a real password.
+
+## Storage and access protections
+
+- D1 stores scrypt hashes, not plaintext or reversibly encrypted passwords: N=32768, r=8, p=3, random 16-byte salt, constant-time verification, 15–128 character passwords.
+- Verification/reset links use random 256-bit tokens. Only token hashes are stored. The URL fragment is removed on load; only an explicit POST consumes a token. Email-scanner GETs cannot change a password.
+- Token consumption and credential-version updates use D1 batch/compare-and-swap guards. Replays/stale tokens fail. Password changes invalidate older password sessions.
+- Writes enforce same origin, bounded bodies, Turnstile hostname/action and rolling quotas. Unknown/ineligible addresses receive a generic response to limit account enumeration.
+- The private three-email administrator allowlist, active role and administrator MFA are required separately. A contact email, database role alone or forged identity header cannot grant owner access.
+
+References: [Cloudflare sending API](https://developers.cloudflare.com/email-service/api/send-emails/workers-api/), [sender bindings](https://developers.cloudflare.com/email-service/configuration/send-bindings/), [email pricing](https://developers.cloudflare.com/email-service/platform/pricing/), [OWASP password storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html).
