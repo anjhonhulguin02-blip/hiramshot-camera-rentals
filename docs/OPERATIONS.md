@@ -4,13 +4,15 @@ Updated 2026-10-29. Production is `https://hiramshot.com`, hosted by `hiramshot-
 
 Public storefront/client access is open (`REVIEW_MODE=false`). KYC intake and native email/password are enabled after service acceptance; search indexing and customer review-media uploads remain disabled. Google requests only OpenID/email/profile. Hourly retention is configured. A full human rental lifecycle and synthetic unattended purge readback remain acceptance items; configured cron is not proof of completed deletion.
 
+Clients can upload before choosing gear; see [account verification](ACCOUNT_VERIFICATION.md). Starting verification does not create a booking. Unlinked requirements expire after seven days; linked documents follow rental retention.
+
 See [deployment](CLOUDFLARE_LAUNCH.md), [scanner](PRIVATE_SCANNER.md), [email](EMAIL_SIGN_IN.md), [payments](PAYMENTS_SETUP.md), [reviews](REVIEWS.md) and the dated [verification record](VERIFICATION.md). Older verification entries describe historical states.
 
 ## Client and administrator workflow
 
 1. Clients sign in using Google or verified email/password. New profiles require the renter and a distinct valid Philippine emergency contact.
 2. Select gear, exact pickup/return times and add-ons. Prices use the existing 1–2, 3–6 and 7+ day tiers. Reservation downpayment is 30% of rental charges, with a PHP500 minimum. Refundable deposits are separate liabilities: X5 PHP1,000; X6 PHP1,500; Neo 2 Standard/Fly More PHP800. Existing booked snapshots are preserved.
-3. Save verification details and upload five distinct requirements from the Requirements tab or booking: two government IDs, company/school ID, latest billing proof, and selfie holding an ID. Supported uploads are at most 5 MB. A sleeping scanner may require a retry after a minute; scan failures never become stored clean files.
+3. Save verification details and upload five distinct requirements from the Requirements tab (no rental request needed) or booking: two government IDs, company/school ID, latest billing proof, and selfie holding an ID. Supported uploads are at most 5 MB. A sleeping scanner may require a retry after a minute; scan failures never become stored clean files.
 4. Administrators sign in at `/admin` and enroll/unlock their own authenticator. Privileged operations require the private three-email ADMIN_ACCESS_EMAILS allowlist, active role and 15-minute MFA session. Never share MFA keys or private document links.
 5. Privately inspect clean files and the billing relationship, then complete the live Messenger physical-ID call. Both document-review and live-call acknowledgements are mandatory. No automated authenticity/OCR decision substitutes for review. Replacing a document invalidates stale approval; a released unit is not guaranteed to remain available.
 6. Approved clients see the official GCash/InstaPay QR and outstanding amount. Check actual received funds before recording payment. Confirmation additionally requires physical-unit availability and agreed handover terms. First-time clients use self-pickup in Norzagaray or an agreed meetup; courier collection is restricted to trusted repeat clients.
@@ -28,7 +30,7 @@ Analytics exclude demo records and distinguish rental collections, refundable de
 
 ## Build, recovery and costs
 
-For behavior changes run `npm test`, `npm run test:components`, `npx tsc --noEmit` and applicable SQLite/Python checks. Build with `npm run build:cloudflare -- --logLevel warn`, then `npm run deploy:cloudflare`. Use generated `dist/server/wrangler.json`; never `--keep-vars`. Preserve applied migrations 0000–0008. Do not casually rotate encryption keys or restore a database without coordinating private objects and ledger consistency.
+For behavior changes run `npm test`, `npm run test:components`, `npx tsc --noEmit` and applicable SQLite/Python checks. Build with `npm run build:cloudflare -- --logLevel warn`, then `npm run deploy:cloudflare`. Use generated `dist/server/wrangler.json`; never `--keep-vars`. Preserve applied migrations 0000–0009. Do not casually rotate encryption keys or restore a database without coordinating private objects and ledger consistency.
 
 If scanner or sender configuration fails, fail closed and repair it. Do not replace scanner failures with clean verdicts or bypass KYC/MFA to meet a deadline. Native email uses accounts@hiramshot.com; Google notices do not contain HiramShot verification links. The owner must complete real password/recovery acceptance.
 

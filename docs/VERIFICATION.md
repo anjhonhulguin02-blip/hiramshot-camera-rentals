@@ -1,5 +1,14 @@
 # HiramShot verification record
 
+## Direct account uploads and one visible verification step — 2026-10-29
+
+- Owner explicitly requested uploads before choosing gear. Migration 0009 adds a separate encrypted account-verification form and private document metadata, without fake bookings or payments. New client Requirements now starts verification directly; existing requests have a separate, clearly selected path.
+- Saved details now hide Step 1 and show only the document uploader. Edit details and Back to document upload retain the server record. Upload errors appear beside the visible uploader. The native file chooser has a clear label and touch-sized control.
+- The MFA-protected admin Verification tab now includes account uploads, using the existing private viewer, signed downloads, replacement and mandatory five-file/live-call approval. Case versions and database triggers reject incomplete or stale approval. Next booking creation transfers current requirements atomically once, preserves pending/approved status and avoids a second stored copy.
+- Unlinked cases expire seven days after first details submission. Retention claims them before deletion, retries object-store failures and removes the encrypted form. Linked records follow booking retention. Consent/privacy text and operations guidance were updated.
+- Passed: 58 unit/security/business tests, 18 component checks, six route/database integration checks and TypeScript. Integration uses in-memory SQLite, synthetic PNGs and service doubles; no production client identity was approved or actual ID used.
+- Migration 0009 was applied remotely and the native build/deployment passed. Live HTTPS checks include denied anonymous access to the new account/admin endpoints. Browser readback on the owner-supplied booking confirmed zero details panels and one file input at the upload step, working Edit details/Back navigation, and the Before choosing gear flow. A 390px account/booking viewport had no horizontal overflow. No saved client details were changed, no real ID was uploaded and no approval was performed by the agent.
+
 ## Public access, native email, private ClamAV and consolidated prices — 2026-10-29
 
 This entry supersedes historical disabled/setup states below.

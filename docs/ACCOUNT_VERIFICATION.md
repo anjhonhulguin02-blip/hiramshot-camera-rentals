@@ -1,0 +1,19 @@
+# Requirements before choosing gear
+
+Added 2026-10-29 at the owner's request. Clients may now open `/account#requirements`, save their verification details and upload all five requirements without a rental request. No placeholder booking, equipment hold, payment or contract is created by starting verification.
+
+The UI shows one step at a time. Saving details replaces Step 1 with Step 2 and the explicit Choose file / Upload private document controls. Saved details can be reopened with Edit details; Back to document upload returns without resubmitting. Existing booking verification uses the same single-step UI.
+
+## Storage, review and lifecycle
+
+Migration 0009 adds account_verifications and account_verification_documents. The personal form is encrypted; objects use opaque keys in the existing private R2 bucket. All uploads retain origin checks, registered active identity, action/hostname-bound Turnstile, shared 10-file account/IP rolling quota, 5 MB limit, type/content checks, metadata sanitization, private antivirus, exact-byte SHA-256 and cleanup if the database commit fails. Duplicate content cannot satisfy two document types. No public bucket URLs or user filenames are stored in these records.
+
+Administrators open Verification → Account verification uploads. The exact existing private admin allowlist, role and MFA gate apply to the list, form details, image viewer, five-minute signed downloads, replacement and approval. Approval requires five clean distinct files, both document-review and completed live-call acknowledgements, a current version and an active client. Database triggers enforce the five reviewed slots and live-review metadata. Replacing a file resets approval and stale versions cannot be approved.
+
+The next newly created rental request automatically receives the current unexpired requirements once. Clients can also select Before choosing gear in Requirements and link them to an existing untouched request. Transfer uses one D1 batch and checks both account and booking ownership, version, status, expiry and document identity. The R2 objects are moved by reference rather than copied, and the source form is scrubbed after linkage. A reviewed case becomes verified booking KYC; partial uploads remain pending and cannot confirm a reservation. Downpayment, fleet availability, agreement and turnover checks remain separate.
+
+Unlinked files and the verification form expire seven calendar days after first saving details; editing does not extend the deadline. The hourly retention job claims an expired case before object deletion, blocks further review/transfer, retries interrupted deletion and scrubs the form. Linked files follow the booking's existing seven-day post-cleared-return policy (or cancellation retention). Saved profile fields are a separate account record. The consent text and privacy notice describe both lifetimes.
+
+## Verification and limits
+
+`npm run test:account-verification` exercises the real route handlers and migration/SQL against in-memory SQLite and private object-store doubles, using synthetic PNGs, a test identity/MFA envelope and mocked Turnstile/scanner responses. It covers cross-account access, missing/negative scan verdicts, duplicate content, missing files/acknowledgements, stale review versions, signed access denial, replacement invalidation, complete/partial transfer, no second object copy, account/IP quota, expiry and interrupted-purge recovery. These tests are not a production ID approval or a live physical-ID call. The real private scanner separately passed clean PNG/EICAR acceptance before this feature.

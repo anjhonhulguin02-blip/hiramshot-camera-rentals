@@ -21,6 +21,7 @@
     "start:vercel": "next start --hostname 127.0.0.1 --port 3000",
     "build:cloudflare": "node scripts/run-cloudflare.mjs build",
     "deploy:cloudflare": "node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js deploy --config dist/server/wrangler.json",
+    "test:account-verification": "node --experimental-transform-types --import ./tests/account-verification-runtime.mjs --test tests/account-verification.test.ts",
     "test:deployment": "node --experimental-strip-types --import ./tests/resolve-types.mjs --test tests/deployment.test.ts tests/review-access.test.ts"
   },
   "dependencies": {

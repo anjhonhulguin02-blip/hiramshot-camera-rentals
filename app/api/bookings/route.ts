@@ -1,3 +1,4 @@
+import {attachAccountVerification} from '../../../lib/account-verification';
 import {normalizePhilippineMobile} from '../../../lib/verification';
 import {POLICY_VERSION} from '../../../lib/policies';
 import {UNVERIFIED_BOOKING_LIMIT,VERIFIED_BOOKING_LIMIT} from '../../../lib/request-limits';
@@ -28,12 +29,13 @@ export async function POST(request: Request) {
   let phone;try{phone=normalizePhilippineMobile(input.phone);}catch(error){throw new ApiError(400,(error as Error).message);}
   if(typeof input.destinationOrEvent!=='string'||input.destinationOrEvent.trim().length<2||input.destinationOrEvent.length>300)throw new ApiError(400,'Enter the rental destination or event.');
   if(!['SELF_PICKUP_NORZAGARAY','MEETUP'].includes(input.turnoverMethod))throw new ApiError(400,'Select self-pickup in Norzagaray, Bulacan, or an agreed meetup.');
-  const db=database(),old=await db.prepare('SELECT id FROM bookings WHERE user_id=? AND request_key=?').bind(user.userId,input.requestKey).first();if(old)return json({id:old.id});
+  const db=database(),old=await db.prepare('SELECT id FROM bookings WHERE user_id=? AND request_key=?').bind(user.userId,input.requestKey).first();if(old){await attachAccountVerification(request,account.id,user.userId,String(old.id));return json({id:old.id});}
   const id=crypto.randomUUID(),now=new Date().toISOString(),reference='HSR-'+new Date().getUTCFullYear()+'-'+id.replaceAll('-','').slice(0,12).toUpperCase();
   await audit(request,user.userId,id,'booking.create.attempt');
   await db.prepare('INSERT INTO bookings(id,user_id,request_key,start_date,end_date,days,items,quote,status,contact,created_at,updated_at,client_id,booking_reference_code,pickup_datetime,return_datetime,destination_or_event,turnover_method,total_rental_fee_centavos,security_deposit_centavos,required_reservation_centavos,lifecycle_status,anti_fraud_consent_at,anti_fraud_consent_version) VALUES (?,?,?,?,?,?,?,?,\'requested\',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(user_id,request_key) DO NOTHING')
    .bind(id,user.userId,input.requestKey,new Date(period.pickupMs+8*3600000).toISOString().slice(0,10),new Date(period.returnMs+8*3600000).toISOString().slice(0,10),period.days,JSON.stringify(input.items),JSON.stringify(quote),await encrypt({name:input.name.trim(),phone,email:user.email}),now,now,account.id,reference,pickup,returned,input.destinationOrEvent.trim(),input.turnoverMethod,(quote.totalMax??0)*100,quote.depositMax*100,(quote.reservationMax??0)*100,'PENDING_KYC_REVIEW',now,POLICY_VERSION).run();
   const saved=await db.prepare('SELECT id FROM bookings WHERE user_id=? AND request_key=?').bind(user.userId,input.requestKey).first();
+  await attachAccountVerification(request,account.id,user.userId,String(saved!.id));
   return json({id:saved!.id},201);
  }catch(error){return failure(error);}
 }

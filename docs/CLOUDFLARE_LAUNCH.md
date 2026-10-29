@@ -10,7 +10,7 @@ The owner chose Cloudflare Workers hosting instead of Vercel after the account w
 - Identity: Google OpenID Connect through Auth.js, verified email required. No incoming Sites identity header establishes a user on this host.
 - Internal account UUIDs, booking quote snapshots, KYC guards, audit and ledger constraints remain in the existing schema. New owner bootstrap profiles contain no password and can only be claimed by the matching verified identity. Existing linked identities are never silently merged into another provider subject.
 
-Migrations 0000–0008 have been applied to the native database. Migration 0008 changes catalog/inventory deposits without rewriting existing booking or financial snapshots. The real D1 HTTP transaction and account/IP quota probes passed using temporary synthetic records, which were removed. No real customer identity files were moved from the old review deployment. The original Sites deployment remains a separate recovery snapshot.
+Migrations 0000–0009 have been applied to the native database. Migration 0008 changes catalog/inventory deposits without rewriting existing booking or financial snapshots. The real D1 HTTP transaction and account/IP quota probes passed using temporary synthetic records, which were removed. No real customer identity files were moved from the old review deployment. The original Sites deployment remains a separate recovery snapshot.
 
 ## Build and deploy
 
@@ -49,6 +49,8 @@ Completed on 2026-10-28 with owner approval: **HiramShot website**, Managed mode
 Email/password is enabled through native Cloudflare Email Service; see [EMAIL_SIGN_IN.md](EMAIL_SIGN_IN.md). The official static QR is privately configured with manual receipt confirmation; an automatic gateway still requires merchant onboarding. See [PAYMENTS_SETUP.md](PAYMENTS_SETUP.md). Reviews, ratings and real-rental ranking are described in [REVIEWS.md](REVIEWS.md).
 
 The deployed private `MALWARE_SCANNER` service binding passed real ClamAV clean/EICAR/unauthenticated acceptance and exact-byte hash checks; KYC intake is now enabled. The shared bearer token is a private Worker secret. See [PRIVATE_SCANNER.md](PRIVATE_SCANNER.md). Scanner failures must reject uploads and never return a fabricated clean result. Real IDs and billing documents stay in private R2, with metadata and encrypted personal fields in D1. Never use public multi-user malware submission services for these files.
+
+Account verification before booking is supported by migration 0009; see [ACCOUNT_VERIFICATION.md](ACCOUNT_VERIFICATION.md). Unlinked requirements expire after seven days; they transfer once to a real booking without duplicating private objects.
 
 The native Cloudflare upload limit remains 5 MB. The optional Vercel adapter advertises 4 MB to remain below that platform's request-body limit. All five distinct clean file kinds, administrator review, live physical-ID verification, emergency contact separation and first-rental pickup/meetup rules remain mandatory.
 
