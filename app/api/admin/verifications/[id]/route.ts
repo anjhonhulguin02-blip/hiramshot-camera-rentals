@@ -1,3 +1,4 @@
+import {validateGovernmentIdPair} from '../../../../../lib/id-document';
 import {assertSameOrigin,ApiError,database,failure,json,readBody} from '../../../../../lib/api';
 import {ensureAccount} from '../../../../../lib/accounts';
 import {accountVerificationDocuments,publicAccountVerification,requireAccountVerification} from '../../../../../lib/account-verification';
@@ -16,6 +17,7 @@ export async function POST(request:Request,{params}:Context){try{
  const version=Number(input.reviewVersion);if(!Number.isSafeInteger(version)||String(input.reviewVersion)!==String(version)||version!==row.version)throw new ApiError(409,'The requirements changed. Refresh all documents before approval.');
  const details=await decrypt(row.personal);try{validateEmergencyContacts(details.mobile,details.emergencyName,details.emergencyRelationship,details.emergencyPhone);}catch(error){throw new ApiError(409,(error as Error).message);}
  const client=await db.prepare("SELECT id FROM users WHERE id=? AND account_status='ACTIVE'").bind(row.user_id).first();if(!client)throw new ApiError(409,'The client account must be active.');
+ const typed=await accountVerificationDocuments(row.id);try{validateGovernmentIdPair(typed as {kind:string;id_type:string|null;deleted_at:string|null}[]);}catch(error){throw new ApiError(409,(error as Error).message);}
  const complete=await db.prepare('SELECT COUNT(DISTINCT kind) AS count FROM account_verification_documents WHERE verification_id=? AND '+CLEAN_KYC_PREDICATE).bind(row.id).first<{count:number}>();if(complete?.count!==5)throw new ApiError(409,'All five distinct clean documents are required before approval.');
  const operator=await ensureAccount(user),now=new Date().toISOString();await audit(request,user.userId,'','account-verification.approve.attempt:'+row.id);
  const result=await db.batch([

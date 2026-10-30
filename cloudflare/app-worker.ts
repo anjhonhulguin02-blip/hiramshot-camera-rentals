@@ -2,13 +2,13 @@ import handler from 'vinext/server/fetch-handler';
 import {isIP} from 'node:net';
 import {reviewDecision,publicReviewPath} from '../lib/review-access';
 import {withRequestSecurity} from '../lib/request-security';
-import {contentSecurityPolicy} from '../lib/http-security';
+import {contentSecurityPolicy,permissionsPolicy} from '../lib/http-security';
 import {purgeExpired} from '../lib/purge';
 import {canonicalRequest} from '../lib/trusted-request';
 import {passwordReady} from '../lib/password-settings';
 
 function secure(request:Request,response:Response,env:Cloudflare.Env){
- const result=new Response(response.body,response);result.headers.set('Content-Security-Policy',contentSecurityPolicy(import.meta.env.DEV));result.headers.set('X-Content-Type-Options','nosniff');result.headers.set('X-Frame-Options','DENY');result.headers.set('Referrer-Policy','strict-origin-when-cross-origin');result.headers.set('Permissions-Policy','camera=(), microphone=(), geolocation=(), payment=()');
+ const result=new Response(response.body,response);result.headers.set('Content-Security-Policy',contentSecurityPolicy(import.meta.env.DEV));result.headers.set('X-Content-Type-Options','nosniff');result.headers.set('X-Frame-Options','DENY');result.headers.set('Referrer-Policy','strict-origin-when-cross-origin');result.headers.set('Permissions-Policy',permissionsPolicy(new URL(request.url).pathname));
  if(!import.meta.env.DEV)result.headers.set('Strict-Transport-Security','max-age=31536000; includeSubDomains');
  if(env.PUBLIC_INDEXING_ENABLED!=='true'||/^\/(?:account|admin|api|book|login|logout|signup|requests)(?:\/|$)/.test(new URL(request.url).pathname))result.headers.set('X-Robots-Tag','noindex, nofollow, noarchive');
  result.headers.set('Cache-Control','private, no-store');return result;

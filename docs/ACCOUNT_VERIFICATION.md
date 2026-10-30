@@ -2,7 +2,11 @@
 
 Added 2026-10-29 at the owner's request. Clients may now open `/account#requirements`, save their verification details and upload all five requirements without a rental request. No placeholder booking, equipment hold, payment or contract is created by starting verification.
 
-The UI shows one step at a time. Saving details replaces Step 1 with Step 2 and the explicit Choose file / Upload private document controls. Saved details can be reopened with Edit details; Back to document upload returns without resubmitting. Existing booking verification uses the same single-step UI.
+The UI shows one step at a time. Saving details replaces Step 1 with Step 2 and guided camera capture. Select a Philippine ID type, capture a photo, preview/retake, then submit for identity review. Existing photos remain an accessible fallback and billing may use plain PDF. Saved details can be reopened with Edit details; Back to document upload returns without resubmitting. Existing booking verification uses the same single-step UI.
+
+Migration 0010 adds client-claimed ID type/source metadata and a private-object cleanup outbox. Both government ID slots need different supported types before approval; PhilID/ePhilID/digital National ID count as one type. Old pending submissions without a type need a rescan. Already reviewed historical booking records are not retroactively rewritten. Clients may replace an unreviewed photo; replacement is guarded against concurrent retakes and old object deletion retries through retention. Reviewed replacements still require administrator action. ID/selfie photos have bounded dimensions, in addition to the file-content/size and antivirus checks.
+
+Camera permission is allowed only on `/book` and `/account`, requested on a user action, with no microphone permission. A frame guides the capture; no video/audio recording occurs. Permission errors include phone-camera/existing-photo alternatives. Streams stop on close, capture, leaving the page or unmount. The UI distinguishes file receipt from identity approval. This is not an authenticity classifier, OCR service or issuer integration; unrelated photos are not automatically identified as fake. See [the automatic-verification preparation and costs](AUTOMATIC_ID_VERIFICATION_PLAN.md).
 
 ## Storage, review and lifecycle
 

@@ -1,5 +1,14 @@
 # HiramShot verification record
 
+## Guided ID capture and automatic-verification preparation — 2026-10-30
+
+- Shared account/booking capture now provides Philippine ID types, camera framing, local preview, retake and a phone-camera/existing-photo fallback. Only account/booking pages permit camera use; microphone remains blocked. Capture permission is requested by a user action. Images stay local until submission and camera tracks stop on close/capture/navigation.
+- The server requires supported ID/source metadata, distinct government ID types and bounded identity-photo dimensions. Unreviewed photos can be replaced with compare-and-swap protection; cleanup of superseded objects retries from a private outbox. Admin approval checks the ID pair and still requires all five safe files, the current review version and physical-ID video-call acknowledgement. File receipt/antivirus is explicitly separated from identity authenticity. No automatic fake-ID classifier is claimed.
+- Added the dated provider shortlist, imminent November pricing change, onboarding/coverage/deletion requirements and proposed secure integration in AUTOMATIC_ID_VERIFICATION_PLAN.md. No vendor signup, paid verification, biometric transfer or new credential was activated.
+- Passed: 62 unit checks, 18 rendered interface checks, nine route/database scenarios (10 test nodes) including both upload routes, parallel retakes, reviewed-file protection, metadata transfer, quota and interrupted cleanup/retention; TypeScript and native build. Only synthetic photos and service doubles were used in the route tests. The existing private ClamAV service was not changed.
+- Deployment initially stopped before any mutation: the current Wrangler OAuth session has account-read access but lacks deployment/D1 scopes (Cloudflare 7403). Owner approved reopening scoped Cloudflare authorization. Migration 0010 and deployment remain pending until that login completes.
+- Browser and Windows automation helpers failed initialization with “failed to write kernel assets: The system cannot find the path specified.” Live camera interaction and physical iPhone/Safari capture have not been verified in this run. No actual client ID, approval, payment or camera permission was submitted by the agent.
+
 ## Direct account uploads and one visible verification step — 2026-10-29
 
 - Owner explicitly requested uploads before choosing gear. Migration 0009 adds a separate encrypted account-verification form and private document metadata, without fake bookings or payments. New client Requirements now starts verification directly; existing requests have a separate, clearly selected path.

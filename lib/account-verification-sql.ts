@@ -1,8 +1,8 @@
 // Numbered bindings are shared by the atomic transfer batch:
 // verification ID, internal account ID, booking ID, authenticated principal, version, now.
 export const TRANSFER_ACCOUNT_DOCUMENTS_SQL=`INSERT INTO kyc_documents
- (id,booking_id,kind,object_key,mime,size,created_at,sha256,scan_status,reviewed_at,reviewed_by)
- SELECT d.id,?3,d.kind,d.object_key,d.mime,d.size,d.created_at,d.sha256,d.scan_status,d.reviewed_at,d.reviewed_by
+ (id,booking_id,kind,object_key,mime,size,created_at,sha256,scan_status,reviewed_at,reviewed_by,id_type,capture_source)
+ SELECT d.id,?3,d.kind,d.object_key,d.mime,d.size,d.created_at,d.sha256,d.scan_status,d.reviewed_at,d.reviewed_by,d.id_type,d.capture_source
  FROM account_verification_documents d JOIN account_verifications v ON v.id=d.verification_id
  WHERE v.id=?1 AND v.user_id=?2 AND v.version=?5 AND v.status IN ('PENDING','APPROVED') AND v.expires_at>?6
  AND d.deleted_at IS NULL AND d.scan_status='CLEAN'

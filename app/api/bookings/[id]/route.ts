@@ -1,3 +1,4 @@
+import {validateGovernmentIdPair} from '../../../../lib/id-document';
 import {COUNT_CLEAN_KYC_SQL,CLEAN_KYC_PREDICATE,validateEmergencyContacts,validateReviewAcknowledgement} from '../../../../lib/verification';
 import {decrypt} from '../../../../lib/security';
 import {findAvailableUnit} from '../../../../lib/inventory';
@@ -11,7 +12,7 @@ import type { Selection, Quote } from '../../../../lib/catalog';
 type Context={params:Promise<{id:string}>};
 export async function GET(request:Request,context:Context){try{
  const admin=new URL(request.url).searchParams.get('admin')==='1',user=admin?await requireStaff(request):await identity(),{id}=await context.params,row=await getBooking(id,user.userId,admin);
- const docs=await database().prepare('SELECT id,kind,mime,size,created_at,deleted_at,scan_status,sha256,reviewed_at FROM kyc_documents WHERE booking_id=?').bind(id).all();
+ const docs=await database().prepare('SELECT id,kind,mime,size,created_at,deleted_at,scan_status,sha256,reviewed_at,id_type,capture_source FROM kyc_documents WHERE booking_id=?').bind(id).all();
  const receipts=await database().prepare('SELECT id,mime,size,created_at FROM payment_receipts WHERE booking_id=? ORDER BY created_at DESC LIMIT 30').bind(id).all();
  if(admin)await audit(request,user.userId,id,'booking.view');return json({booking:await safeBooking(row,admin),documents:docs.results,receipts:receipts.results});
 }catch(error){return failure(error);}}
@@ -65,6 +66,7 @@ export async function POST(request:Request,context:Context){try{
   try{validateReviewAcknowledgement(input);}catch(error){throw new ApiError(400,(error as Error).message);}
   const reviewVersion=Number(input.reviewVersion);if(!Number.isSafeInteger(reviewVersion)||String(input.reviewVersion)!==String(reviewVersion)||reviewVersion!==(row.kyc_version??0))throw new ApiError(409,'The verification details changed. Refresh all documents before approving.');
   const details=await decrypt(row.personal);try{validateEmergencyContacts(details.mobile,details.emergencyName,details.emergencyRelationship,details.emergencyPhone);}catch(error){throw new ApiError(409,(error as Error).message);}
+  const typed=await db.prepare('SELECT kind,id_type,deleted_at FROM kyc_documents WHERE booking_id=?').bind(id).all<{kind:string;id_type:string|null;deleted_at:string|null}>();try{validateGovernmentIdPair(typed.results);}catch(error){throw new ApiError(409,(error as Error).message);}
   const complete=await db.prepare(COUNT_CLEAN_KYC_SQL).bind(id).first<{count:number}>();if(complete?.count!==5)throw new ApiError(409,'All five distinct, clean document types must be uploaded before approval.');
   const operator=await ensureAccount(user);
   const result=await db.batch([

@@ -10,9 +10,9 @@ import {INITIAL_CATALOG} from '../lib/catalog.ts';
 
 const render=(component,props)=>renderToStaticMarkup(React.createElement(component,props));
 test('approval dialog requires all five clean files and both review acknowledgements',()=>{
- const documents=DOCUMENT_KINDS.map((kind,i)=>({id:String(i),kind,deleted_at:null,scan_status:'CLEAN',sha256:String(i).repeat(64)}));
+ const documents=DOCUMENT_KINDS.map((kind,i)=>({id:String(i),kind,deleted_at:null,scan_status:'CLEAN',sha256:String(i).repeat(64),id_type:i===0?'drivers-license':i===1?'national-id':null}));
  const html=render(KycReview,{documents,busy:false,version:7,onApprove:async()=>true});
- assert.equal((html.match(/Uploaded &amp; scanned/g)||[]).length,5);
+ assert.equal((html.match(/File received/g)||[]).length,5);
  assert.ok(html.includes(VIDEO_REVIEW_ACKNOWLEDGEMENT));
  for(const name of ['documentsReviewed','videoCallCompleted'])assert.ok(html.match(new RegExp('<input[^>]*name="'+name+'"[^>]*>'))?.[0].includes('required=""'));
  assert.ok(html.includes('name="reviewVersion" value="7"'));

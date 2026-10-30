@@ -14,7 +14,7 @@
     "db:generate": "drizzle-kit generate",
     "seed:generate": "node scripts/seed.mjs",
     "seed:local": "node scripts/seed.mjs --apply-local",
-    "test": "node --experimental-strip-types --import ./tests/resolve-types.mjs --test tests/rental.test.ts tests/finance.test.ts tests/anti-fraud.test.ts tests/deployment.test.ts tests/review-access.test.ts tests/password.test.ts tests/reviews.test.ts tests/paymongo.test.ts tests/personal-validation.test.ts tests/malware-scanner.test.ts tests/payment-qr.test.ts",
+    "test": "node --experimental-strip-types --import ./tests/resolve-types.mjs --test tests/rental.test.ts tests/finance.test.ts tests/anti-fraud.test.ts tests/deployment.test.ts tests/review-access.test.ts tests/password.test.ts tests/reviews.test.ts tests/paymongo.test.ts tests/personal-validation.test.ts tests/malware-scanner.test.ts tests/payment-qr.test.ts tests/id-document.test.ts",
     "test:components": "node --experimental-strip-types --import ./tests/render-tsx.mjs --test tests/rate-display.test.mjs tests/kyc-components.test.mjs tests/login-components.test.mjs tests/authenticator-components.test.mjs tests/verification-components.test.mjs tests/requirements-components.test.mjs",
     "build:vercel": "next build --webpack",
     "dev:vercel": "next dev --webpack --hostname 127.0.0.1 --port 3000",

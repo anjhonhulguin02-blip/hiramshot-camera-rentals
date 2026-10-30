@@ -11,6 +11,7 @@ for(const [path,status,extra]of [['/',publicLaunch?200:303,{}],['/account',publi
  if(path==='/login'){loginHtml=body;assert.ok(body.includes('Continue with Google'));if(!googleConfigured)assert.ok(body.includes('disabled'));}
  if(publicLaunch&&path==='/account')assert.ok(body.includes('Log in securely'),'anonymous account page must offer sign-in');
  if(publicLaunch&&path==='/admin')assert.ok(body.includes('Owner access required.'),'anonymous admin page must deny owner access');
+ assert.ok(response.headers.get('permissions-policy')?.startsWith(path==='/account'?'camera=(self)':'camera=()'),path+' camera policy');
  console.log('PASS',status,path);
 }
 // A successful HTML response alone cannot prove that the deployed UI loads.
@@ -26,6 +27,7 @@ await Promise.all(assets.map(async path=>{
  assert.equal(response.headers.get('x-content-type-options'),'nosniff');
 }));
 console.log('PASS',assets.length,'referenced CSS/JavaScript assets');
+const book=await fetch(base+'/book',{redirect:'manual'});assert.ok(book.headers.get('permissions-policy')?.startsWith('camera=(self)'));
 for(const path of ['/forgot-password','/create-account','/reset-password','/verify-email']){
  const response=await fetch(base+path,{redirect:'manual'});assert.equal(response.status,200,path);const html=await response.text();assert.ok(!html.includes('temporarily unavailable'));if(!passwordConfigured){assert.ok(html.includes('Continue with Google'));assert.ok(!html.includes('type="password"'));}else if(path==='/create-account'||path==='/forgot-password'){assert.ok(html.includes('type="email"'));}else assert.ok(html.includes('type="password"'));console.log('PASS recovery/setup page',path);
 }
