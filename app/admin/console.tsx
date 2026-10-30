@@ -1,5 +1,6 @@
 'use client';
 import KycReview from './kyc-review';
+import {ownerNotificationTarget} from '../../lib/owner-notification-links';
 import AccountVerifications from './account-verifications';
 import DocumentViewer,{type VerificationDocument} from './document-viewer';
 import AuthenticatorSetup from './authenticator-setup';
@@ -22,6 +23,7 @@ export default function OwnerConsole({role}:{role:'ADMIN'|'STAFF'}){
  const [verified,setVerified]=useState(false),[enrolled,setEnrolled]=useState<boolean|null>(null),[secret,setSecret]=useState(''),[setupUri,setSetupUri]=useState(''),[code,setCode]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false),[tab,setTab]=useState('Bookings'),[bookings,setBookings]=useState<PublicBooking[]>([]),[selected,setSelected]=useState<PublicBooking|null>(null),[docs,setDocs]=useState<DocumentRow[]>([]),[equipment,setEquipment]=useState<Equipment[]>(INITIAL_CATALOG),[editor,setEditor]=useState(''),[events,setEvents]=useState<any[]>([]),[message,setMessage]=useState('');
  async function refresh(){try{const v=await api('/api/bookings?admin=1');setBookings(v.bookings);}catch(e){setError((e as Error).message);}}
  useEffect(()=>{api('/api/admin-enroll').then(v=>setEnrolled(v.enrolled)).catch(e=>setError(e.message));api('/api/admin-session').then(()=>{setVerified(true);void refresh();}).catch(()=>{});},[]);
+ useEffect(()=>{if(!verified)return;const target=ownerNotificationTarget(window.location.search);if(target){setTab(target.tab);if(target.booking)void openBooking(target.booking);}},[verified]);
  async function enroll(action:string){setError('');setBusy(true);try{const v=await api('/api/admin-enroll',post({action,code}));if(v.secret){setSecret(v.secret);setSetupUri(v.uri||'');}if(v.enrolled){setEnrolled(true);setSecret('');setSetupUri('');setCode('');setMessage('MFA enrolled. Enter a new authenticator code to unlock the dashboard.');}}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
  async function unlock(e:FormEvent){e.preventDefault();setBusy(true);setError('');try{await api('/api/admin-session',post({code}));setCode('');setVerified(true);await refresh();}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
  async function openBooking(id:string){setError('');setBusy(true);try{const v=await api('/api/bookings/'+id+'?admin=1');setSelected(v.booking);setDocs(v.documents);setReceipts(v.receipts||[]);setReturnAt(manilaInput(new Date().toISOString()));}catch(e){setError((e as Error).message);}finally{setBusy(false);}}

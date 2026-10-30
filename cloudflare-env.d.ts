@@ -36,6 +36,9 @@ declare namespace Cloudflare {
     PURGE_SECRET?: string;
     KYC_RETENTION_DAYS?: string;
     ADMIN_CONTACT_EMAIL?: string;
+    ADMIN_NOTIFICATIONS_ENABLED?: string;
+    ADMIN_NOTIFICATION_EMAIL?: string;
+    ADMIN_NOTIFICATION_DAILY_LIMIT?: string;
     ADMIN_ACCESS_EMAILS?: string;
     APP_BASE_URL?: string;
     NEXT_PUBLIC_SITE_URL?: string;

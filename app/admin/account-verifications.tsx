@@ -2,6 +2,7 @@
 import {useEffect,useState,type FormEvent} from 'react';
 import DocumentViewer,{type VerificationDocument} from './document-viewer';
 import KycReview from './kyc-review';
+import {ownerNotificationTarget} from '../../lib/owner-notification-links';
 type Summary={id:string;status:string;full_name:string;email:string;document_count:number;expires_at:string};
 type Detail={id:string;status:string;version:number;expires_at:string;personal:Record<string,string>|null};
 async function api(path:string,options?:RequestInit){const response=await fetch(path,{...options,signal:AbortSignal.timeout(15000)}),data=await response.json() as any;if(!response.ok)throw new Error(data.error||'The verification request failed.');return data;}
@@ -9,7 +10,7 @@ const post=(value:unknown):RequestInit=>({method:'POST',headers:{'Content-Type':
 export default function AccountVerifications(){
  const [rows,setRows]=useState<Summary[]>([]),[detail,setDetail]=useState<Detail|null>(null),[docs,setDocs]=useState<VerificationDocument[]>([]),[client,setClient]=useState<{full_name:string;email:string}|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[loading,setLoading]=useState(true);
  async function list(){try{const data=await api('/api/admin/verifications');setRows(data.verifications);setError('');}catch(error){setError((error as Error).message);}finally{setLoading(false);}}
- useEffect(()=>{void list();},[]);
+ useEffect(()=>{void list();const target=ownerNotificationTarget(window.location.search);if(target?.verification)void open(target.verification);},[]);
  async function open(id:string){setBusy(true);setError('');setDetail(null);setDocs([]);try{const data=await api('/api/admin/verifications/'+encodeURIComponent(id));setDetail(data.verification);setDocs(data.documents);setClient(data.client);}catch(error){setError((error as Error).message);}finally{setBusy(false);}}
  async function approve(event:FormEvent<HTMLFormElement>){event.preventDefault();if(!detail)return false;const form=new FormData(event.currentTarget);setBusy(true);setError('');try{await api('/api/admin/verifications/'+detail.id,post({action:'approve',reviewVersion:form.get('reviewVersion'),documentsReviewed:form.get('documentsReviewed')==='on',videoCallCompleted:form.get('videoCallCompleted')==='on'}));await open(detail.id);await list();return true;}catch(error){setError((error as Error).message);return false;}finally{setBusy(false);}}
  async function download(id:string){setError('');try{const data=await api('/api/documents/'+id,post({}));window.open(data.url,'_blank','noopener,noreferrer');}catch(error){setError((error as Error).message);}}

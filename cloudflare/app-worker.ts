@@ -6,6 +6,7 @@ import {contentSecurityPolicy,permissionsPolicy} from '../lib/http-security';
 import {purgeExpired} from '../lib/purge';
 import {canonicalRequest} from '../lib/trusted-request';
 import {passwordReady} from '../lib/password-settings';
+import {deliverOwnerNotifications,ownerNotificationMutation} from '../lib/owner-notifications';
 
 function secure(request:Request,response:Response,env:Cloudflare.Env){
  const result=new Response(response.body,response);result.headers.set('Content-Security-Policy',contentSecurityPolicy(import.meta.env.DEV));result.headers.set('X-Content-Type-Options','nosniff');result.headers.set('X-Frame-Options','DENY');result.headers.set('Referrer-Policy','strict-origin-when-cross-origin');result.headers.set('Permissions-Policy',permissionsPolicy(new URL(request.url).pathname));
@@ -31,7 +32,8 @@ export default {
   // Capture trusted edge metadata before the application proxy strips ingress headers.
   const ip=request.headers.get('cf-connecting-ip');
   response=await withRequestSecurity({ip:ip&&isIP(ip)?ip:import.meta.env.DEV?'127.0.0.1':'unavailable'},()=>handler.fetch(canonicalRequest(request),env,ctx));
+  if(ownerNotificationMutation(request,response))ctx.waitUntil(deliverOwnerNotifications(env).catch(()=>{console.error('Owner notification delivery deferred; scheduled retry will run.');}));
   return secure(request,response,env);
  },
- async scheduled(_event:ScheduledController,env:Cloudflare.Env,ctx:ExecutionContext){ctx.waitUntil(purgeExpired(env));},
+ async scheduled(event:ScheduledController,env:Cloudflare.Env,ctx:ExecutionContext){if(event.cron==='0 * * * *')ctx.waitUntil(purgeExpired(env));ctx.waitUntil(deliverOwnerNotifications(env));},
 };
