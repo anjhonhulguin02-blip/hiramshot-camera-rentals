@@ -2,7 +2,9 @@ import { database } from './api';
 import { dailyRateTier, type Equipment } from './catalog';
 export const AVAILABLE_UNIT_SQL = "SELECT id FROM units WHERE equipment_id=? AND active=1 AND id NOT IN(SELECT unit_id FROM unit_reservations WHERE pickup_ms<? AND return_ms>?) AND id NOT IN(SELECT unit_id FROM booking_days WHERE day>=? AND day<?) AND id NOT IN(SELECT r.unit_id FROM unit_reservations r JOIN bookings b ON b.id=r.booking_id WHERE b.status='out' AND r.return_ms<?) ORDER BY id LIMIT 1";
 export function findAvailableUnit(equipmentId: string, pickupMs: number, returnMs: number, startDate: string, endDate: string) {
- return database().prepare(AVAILABLE_UNIT_SQL).bind(equipmentId, returnMs, pickupMs, startDate, endDate, Date.now()).first<{id:string}>();
+ // Legacy whole-day holds also cover a return day's hours before the cutoff.
+ const localReturn=returnMs+8*3600000,legacyEnd=new Date(Math.ceil(localReturn/86400000)*86400000).toISOString().slice(0,10);
+ return database().prepare(AVAILABLE_UNIT_SQL).bind(equipmentId, returnMs, pickupMs, startDate, legacyEnd, Date.now()).first<{id:string}>();
 }
 export async function synchronizeInventory(list: Equipment[]) {
   const db = database(), now = new Date().toISOString();

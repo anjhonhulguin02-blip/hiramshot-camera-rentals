@@ -10,6 +10,23 @@ import { rentalPeriod, latePenaltyCentavos, toCentavos } from '../../../../lib/f
 import { financialState, applyReturnDeductions, type FinancialBooking } from '../../../../lib/ledger';
 import type { Selection, Quote } from '../../../../lib/catalog';
 type Context={params:Promise<{id:string}>};
+export async function DELETE(request:Request,context:Context){try{
+ assertSameOrigin(request);const user=await requireAdmin(request),operator=await ensureAccount(user),{id}=await context.params,row=await getBooking(id,user.userId,true),input=await readBody(request),db=database();
+ if(input?.confirmReference!==(row as FinancialBooking).booking_reference_code&&input?.confirmReference!==row.id)throw new ApiError(400,'Confirm the exact booking reference before deleting it from the active list.');
+ if(!['suspected_fraud','duplicate_test','client_requested','other'].includes(input?.reason))throw new ApiError(400,'Choose the reason for archiving this request.');
+ if(row.archived_at)return json({ok:true,archived:true});
+ if(!['requested','verification','verified','reserved','cancelled'].includes(row.status)||row.signed_at||row.contract_hash)throw new ApiError(409,'Only unpaid, unsigned requests can be archived. Signed or active rentals must remain on the rental desk.');
+ const now=new Date().toISOString(),purgeAt=new Date(Date.now()+7*86400000).toISOString();
+ const allowed="EXISTS(SELECT 1 FROM bookings b WHERE b.id=? AND b.archived_at IS NULL AND b.status IN ('requested','verification','verified','reserved','cancelled') AND b.signed_at IS NULL AND b.contract_hash IS NULL AND NOT EXISTS(SELECT 1 FROM payments p WHERE p.booking_id=b.id) AND NOT EXISTS(SELECT 1 FROM financial_transactions t WHERE t.booking_id=b.id))";
+ await audit(request,user.userId,id,'booking.archive.attempt:'+input.reason);
+ const results=await db.batch([
+  db.prepare('DELETE FROM unit_reservations WHERE booking_id=? AND '+allowed).bind(id,id),
+  db.prepare('DELETE FROM booking_days WHERE booking_id=? AND '+allowed).bind(id,id),
+  db.prepare("UPDATE bookings SET status='cancelled',lifecycle_status='CANCELLED_FORFEITED',archived_at=?,archived_by=?,archive_reason=?,purge_at=COALESCE(purge_at,?),updated_at=? WHERE id=? AND "+allowed).bind(now,operator.id,input.reason,purgeAt,now,id,id)
+ ]);
+ if(!results[2].meta.changes)throw new ApiError(409,'The request changed or has payment records. Keep financial records on the rental desk and use client restrictions when needed.');
+ await audit(request,user.userId,id,'booking.archive.complete');return json({ok:true,archived:true});
+}catch(error){return failure(error);}}
 export async function GET(request:Request,context:Context){try{
  const admin=new URL(request.url).searchParams.get('admin')==='1',user=admin?await requireStaff(request):await identity(),{id}=await context.params,row=await getBooking(id,user.userId,admin);
  const docs=await database().prepare('SELECT id,kind,mime,size,created_at,deleted_at,scan_status,sha256,reviewed_at,id_type,capture_source FROM kyc_documents WHERE booking_id=?').bind(id).all();
@@ -42,7 +59,11 @@ export async function PATCH(request:Request,context:Context){try{
 export async function POST(request:Request,context:Context){try{
  assertSameOrigin(request);const user=await requireStaff(request),{id}=await context.params,row=await getBooking(id,user.userId,true) as FinancialBooking,input=await readBody(request),db=database(),now=new Date().toISOString(),action=input?.action;
  await audit(request,user.userId,id,`booking.${String(action).slice(0,40)}.attempt`);
- if(action==='reserve'){
+ if(action==='restore'){
+  await requireAdmin(request);if(!row.archived_at)throw new ApiError(409,'This request is already in the active list.');
+  await db.prepare("UPDATE bookings SET archived_at=NULL,archived_by=NULL,archive_reason=NULL,updated_at=? WHERE id=? AND status='cancelled'").bind(now,id).run();
+ }else if(row.archived_at){throw new ApiError(409,'Restore this archived request before managing it.');
+ }else if(action==='reserve'){
   if(row.status!=='verified'||!row.verified_at)throw new ApiError(409,'Complete all five document reviews and the live video verification before confirming a reservation.');
   const client=await db.prepare('SELECT account_status,kyc_status,video_call_verified FROM users WHERE auth_user_id=?').bind(row.user_id).first<{account_status:string;kyc_status:string;video_call_verified:number}>();if(!client||client.account_status!=='ACTIVE'||client.kyc_status!=='VERIFIED'||!client.video_call_verified)throw new ApiError(409,'The client account and video verification must be active before reservation confirmation.');
   const complete=await db.prepare(COUNT_CLEAN_KYC_SQL+' AND reviewed_at IS NOT NULL AND reviewed_by IS NOT NULL').bind(id).first<{count:number}>();if(complete?.count!==5)throw new ApiError(409,'All five clean, distinct document types must remain reviewed before confirmation.');

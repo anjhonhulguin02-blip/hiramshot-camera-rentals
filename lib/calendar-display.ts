@@ -1,0 +1,3 @@
+export function shiftMonth(month:string,offset:number){const [year,number]=month.split('-').map(Number);return new Date(Date.UTC(year,number-1+offset,1)).toISOString().slice(0,7);}
+export function monthLabel(month:string){return new Intl.DateTimeFormat('en-PH',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(month+'-01T00:00:00Z'));}
+export function monthDates(month:string){const first=new Date(month+'-01T00:00:00Z'),days=new Date(Date.UTC(first.getUTCFullYear(),first.getUTCMonth()+1,0)).getUTCDate();return {padding:first.getUTCDay(),dates:Array.from({length:days},(_,i)=>month+'-'+String(i+1).padStart(2,'0'))};}

@@ -11,7 +11,7 @@ const render=(component,props)=>renderToStaticMarkup(React.createElement(compone
 test('the restored storefront and all daily rate tables contain regular prices without seasonal advertising',()=>{
  const html=render(Storefront,{user:null});
  assert.ok(html.includes('Borrow the gear.'));assert.ok(html.includes('Own the'));assert.ok(html.includes('/assets/logo.png'));
- assert.ok(html.includes('gear-journey'));assert.ok(html.includes('Pause page motion'));
+ assert.ok(html.includes('gear-journey'));assert.ok(!html.includes('Pause page motion'));assert.ok(!html.includes('See the gear in motion'));
  assert.ok(!/Halloween|After Dark|halloween-|afterdark-|10% OFF/i.test(html));
  for(const gear of INITIAL_CATALOG){
   const schedule=render(RateSchedule,{equipment:gear,days:2});

@@ -1,4 +1,5 @@
 import {attachAccountVerification} from '../../../lib/account-verification';
+import {unavailableEquipment} from '../../../lib/availability';
 import {normalizePhilippineMobile} from '../../../lib/verification';
 import {POLICY_VERSION} from '../../../lib/policies';
 import {UNVERIFIED_BOOKING_LIMIT,VERIFIED_BOOKING_LIMIT} from '../../../lib/request-limits';
@@ -12,7 +13,8 @@ import { encrypt, applyRequestLimit, verifyTurnstile, audit, requireStaff } from
 export async function GET(request: Request) {
  try {
   const admin=new URL(request.url).searchParams.get('admin')==='1',user=admin?await requireStaff(request):await identity(),db=database();
-  const rows=admin?await db.prepare('SELECT * FROM bookings WHERE is_demo=0 ORDER BY created_at DESC LIMIT 200').all<BookingRow>():await db.prepare('SELECT * FROM bookings WHERE user_id=? AND is_demo=0 ORDER BY created_at DESC LIMIT 100').bind(user.userId).all<BookingRow>();
+  const archived=new URL(request.url).searchParams.get('archived')==='1';
+  const rows=admin?await db.prepare('SELECT * FROM bookings WHERE is_demo=0 AND archived_at IS '+(archived?'NOT NULL':'NULL')+' ORDER BY created_at DESC LIMIT 200').all<BookingRow>():await db.prepare('SELECT * FROM bookings WHERE user_id=? AND is_demo=0 ORDER BY created_at DESC LIMIT 100').bind(user.userId).all<BookingRow>();
   const states=await financialStates(rows.results);
   if(admin)await audit(request,user.userId,'','bookings.list');
   return json({bookings:await Promise.all(rows.results.map(row=>safeBooking(row,admin,states.get(row.id))))});
@@ -31,6 +33,8 @@ export async function POST(request: Request) {
   if(!['SELF_PICKUP_NORZAGARAY','MEETUP'].includes(input.turnoverMethod))throw new ApiError(400,'Select self-pickup in Norzagaray, Bulacan, or an agreed meetup.');
   const db=database(),old=await db.prepare('SELECT id FROM bookings WHERE user_id=? AND request_key=?').bind(user.userId,input.requestKey).first();if(old){await attachAccountVerification(request,account.id,user.userId,String(old.id));return json({id:old.id});}
   if(input.expectedTotal!==undefined&&(!Number.isFinite(input.expectedTotal)||Math.round(Number(input.expectedTotal)*100)!==Math.round(quote.totalMax!*100)))throw new ApiError(409,'Your rental price changed. Refresh the rates and review the updated total before sending your request.');
+  const unavailable=await unavailableEquipment(quote.lines.map(line=>line.equipmentId),period.pickupMs,period.returnMs);
+  if(unavailable.length)throw new ApiError(409,'The selected equipment is unavailable for these pickup and return times. Choose different dates or equipment.');
   const id=crypto.randomUUID(),now=new Date().toISOString(),reference='HSR-'+new Date().getUTCFullYear()+'-'+id.replaceAll('-','').slice(0,12).toUpperCase();
   await audit(request,user.userId,id,'booking.create.attempt');
   await db.prepare('INSERT INTO bookings(id,user_id,request_key,start_date,end_date,days,items,quote,status,contact,created_at,updated_at,client_id,booking_reference_code,pickup_datetime,return_datetime,destination_or_event,turnover_method,total_rental_fee_centavos,security_deposit_centavos,required_reservation_centavos,lifecycle_status,anti_fraud_consent_at,anti_fraud_consent_version) VALUES (?,?,?,?,?,?,?,?,\'requested\',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(user_id,request_key) DO NOTHING')
