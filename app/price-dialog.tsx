@@ -5,14 +5,12 @@ import { ArrowUpRight, X } from 'lucide-react';
 import type { Equipment } from '../lib/catalog';
 import RateSchedule from './rate-schedule';
 
-export default function PriceDialog({ equipment, days, start, end, onClose, promotion=false, campaignActive=false }: {
+export default function PriceDialog({ equipment, days, start, end, onClose }: {
   equipment: Equipment;
   days?: number;
   start: string;
   end: string;
   onClose: () => void;
-  promotion?:boolean;
-  campaignActive?:boolean;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
 
@@ -52,9 +50,7 @@ export default function PriceDialog({ equipment, days, start, end, onClose, prom
     <p className="prices-context">{days
       ? `Your selected rental: ${days} day${days === 1 ? '' : 's'}. The applicable rate is highlighted.`
       : 'Daily rates depend on your rental duration.'}</p>
-    {promotion&&<p className="promo-rate-notice">Halloween: 10% off camera/drone rates shown below. Book and pick up by November 3, 2026, 11:59 PM PHT. Your return may be later.</p>}
-    {campaignActive&&!promotion&&start&&<p className="promo-rate-notice">Your selected pickup is outside the Halloween promo window. The regular rates below apply.</p>}
-    <RateSchedule equipment={equipment} days={days} promotion={promotion}/>
+    <RateSchedule equipment={equipment} days={days} />
     <p className="prices-note">Rates are per rental day. Add-ons are charged separately. The security deposit is refundable after a cleared return inspection.</p>
     <a className="button full-width" href={bookingUrl}>Choose dates & book <ArrowUpRight size={18} aria-hidden="true" /></a>
   </dialog>;

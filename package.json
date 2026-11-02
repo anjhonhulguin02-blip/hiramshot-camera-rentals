@@ -14,8 +14,8 @@
     "db:generate": "drizzle-kit generate",
     "seed:generate": "node scripts/seed.mjs",
     "seed:local": "node scripts/seed.mjs --apply-local",
-    "test": "node --experimental-strip-types --import ./tests/resolve-types.mjs --test tests/rental.test.ts tests/finance.test.ts tests/anti-fraud.test.ts tests/deployment.test.ts tests/review-access.test.ts tests/password.test.ts tests/reviews.test.ts tests/paymongo.test.ts tests/personal-validation.test.ts tests/malware-scanner.test.ts tests/payment-qr.test.ts tests/id-document.test.ts tests/halloween.test.ts tests/owner-notifications.test.ts",
-    "test:components": "node --experimental-strip-types --import ./tests/render-tsx.mjs --test tests/rate-display.test.mjs tests/kyc-components.test.mjs tests/login-components.test.mjs tests/authenticator-components.test.mjs tests/verification-components.test.mjs tests/requirements-components.test.mjs tests/halloween-components.test.mjs",
+    "test": "node --experimental-strip-types --import ./tests/resolve-types.mjs --test tests/rental.test.ts tests/finance.test.ts tests/anti-fraud.test.ts tests/deployment.test.ts tests/review-access.test.ts tests/password.test.ts tests/reviews.test.ts tests/paymongo.test.ts tests/personal-validation.test.ts tests/malware-scanner.test.ts tests/payment-qr.test.ts tests/id-document.test.ts tests/owner-notifications.test.ts",
+    "test:components": "node --experimental-strip-types --import ./tests/render-tsx.mjs --test tests/rate-display.test.mjs tests/kyc-components.test.mjs tests/login-components.test.mjs tests/authenticator-components.test.mjs tests/verification-components.test.mjs tests/requirements-components.test.mjs tests/regular-pricing-components.test.mjs",
     "build:vercel": "next build --webpack",
     "dev:vercel": "next dev --webpack --hostname 127.0.0.1 --port 3000",
     "start:vercel": "next start --hostname 127.0.0.1 --port 3000",
@@ -23,7 +23,7 @@
     "deploy:cloudflare": "node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js deploy --config dist/server/wrangler.json",
     "test:account-verification": "node --experimental-transform-types --import ./tests/account-verification-runtime.mjs --test tests/account-verification.test.ts",
     "test:deployment": "node --experimental-strip-types --import ./tests/resolve-types.mjs --test tests/deployment.test.ts tests/review-access.test.ts",
-    "test:campaign-api": "node --experimental-transform-types --import ./tests/account-verification-runtime.mjs --test tests/halloween-api.test.ts"
+    "test:booking-pricing-api": "node --experimental-transform-types --import ./tests/account-verification-runtime.mjs --test tests/booking-pricing-api.test.ts"
   },
   "dependencies": {
     "@auth/core": "0.41.3",

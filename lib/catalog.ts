@@ -41,7 +41,7 @@ export function calculateQuote(catalog: Equipment[], items: Selection[], days: n
   return { lines, days, discount, custom, totalMin, totalMax, depositMin: lines.reduce((n,l) => n+l.depositMin,0), depositMax: lines.reduce((n,l) => n+l.depositMax,0), reservationMin: totalMin === null ? null : Math.max(500, Math.ceil(totalMin*.3)), reservationMax: totalMax === null ? null : Math.max(500, Math.ceil(totalMax*.3)) };
 }
 export type AgreementTerms={location:string;pickupAt:string;returnAt:string;replacementValues:Record<string,number>};
-export type Quote = ReturnType<typeof calculateQuote>&{agreementTerms?:AgreementTerms;promotion?:import('./halloween-promotion').PromotionSnapshot};
+export type Quote = ReturnType<typeof calculateQuote>&{agreementTerms?:AgreementTerms;promotion?:import('./pricing-snapshot').PromotionSnapshot};
 export function validateEquipment(value: unknown): Equipment {
   const e = value as Equipment;
   const text = (s: unknown, max: number) => typeof s === 'string' && s.length > 0 && s.length <= max;

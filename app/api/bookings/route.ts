@@ -3,8 +3,7 @@ import {normalizePhilippineMobile} from '../../../lib/verification';
 import {POLICY_VERSION} from '../../../lib/policies';
 import {UNVERIFIED_BOOKING_LIMIT,VERIFIED_BOOKING_LIMIT} from '../../../lib/request-limits';
 import { assertSameOrigin, ApiError, database, failure, identity, json, readBody } from '../../../lib/api';
-import { type Selection } from '../../../lib/catalog';
-import {quoteWithHalloween} from '../../../lib/halloween-promotion';
+import { calculateQuote,type Selection } from '../../../lib/catalog';
 import { catalog, safeBooking, type BookingRow } from '../../../lib/booking';
 import { rentalPeriod } from '../../../lib/finance';
 import { financialStates } from '../../../lib/ledger';
@@ -23,7 +22,7 @@ export async function POST(request: Request) {
  try {
   assertSameOrigin(request);const user=await identity(),account=await ensureAccount(user);await applyRequestLimit(request,user.userId,account.kyc_status==='VERIFIED'?VERIFIED_BOOKING_LIMIT:UNVERIFIED_BOOKING_LIMIT);const input=await readBody(request);await verifyTurnstile(request,input?.turnstileToken,'booking');
   const pickup=input?.pickupDatetime||String(input?.startDate)+'T09:00:00+08:00',returned=input?.returnDatetime||String(input?.endDate)+'T09:00:00+08:00';
-  let period,quote;try{period=rentalPeriod(pickup,returned);quote=quoteWithHalloween(await catalog(),input?.items as Selection[],period.days,{pickup});}catch(error){throw new ApiError(400,(error as Error).message);}
+  let period,quote;try{period=rentalPeriod(pickup,returned);quote=calculateQuote(await catalog(),input?.items as Selection[],period.days);}catch(error){throw new ApiError(400,(error as Error).message);}
   if(input?.antiFraudConsent!==true||input?.policyVersion!==POLICY_VERSION)throw new ApiError(400,'Read and accept the current anti-pawning and lawful evidence notice.');
   if(!/^[\da-f-]{36}$/i.test(input?.requestKey)||input.consent!==true)throw new ApiError(400,'A request key and acceptance of the privacy notice are required.');
   if(typeof input.name!=='string'||input.name.trim().length<2||input.name.length>100||typeof input.phone!=='string'||!/^[+\d() -]{7,25}$/.test(input.phone))throw new ApiError(400,'Enter your full name and valid mobile number.');

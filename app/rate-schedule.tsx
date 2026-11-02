@@ -1,11 +1,9 @@
 import { dailyRateTier, dailyRateText, rateTierLabel, peso, type Equipment } from '../lib/catalog';
-import {halloweenDaily,halloweenMoney} from '../lib/halloween-promotion';
 
-export default function RateSchedule({ equipment, days, variantName, promotion=false }: {
+export default function RateSchedule({ equipment, days, variantName }: {
   equipment: Equipment;
   days?: number;
   variantName?: string;
-  promotion?:boolean;
 }) {
   const variants = variantName
     ? equipment.variants.filter(v => v.name === variantName)
@@ -22,7 +20,7 @@ export default function RateSchedule({ equipment, days, variantName, promotion=f
             key={`${tier.minDays}-${tier.maxDays}`}
           >
             <dt>{rateTierLabel(tier)}</dt>
-            <dd>{promotion?<><del>{dailyRateText(tier)}</del><strong>{halloweenMoney(halloweenDaily(tier.max))}/day</strong></>:dailyRateText(tier)}</dd>
+            <dd>{dailyRateText(tier)}</dd>
           </div>)}
         </dl>
         <p className="rate-package-deposit">Refundable deposit: {peso(variant.deposit[1])}</p>

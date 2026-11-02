@@ -3,9 +3,6 @@ import { useState, useRef, useEffect, type FormEvent } from 'react';
 import { ArrowUpRight, ArrowRight, CalendarDays, Camera, Check, ShieldCheck, BatteryCharging, Aperture, Menu, X, Plus, Minus, PackageCheck, Send, LoaderCircle, Compass } from 'lucide-react';
 import { INITIAL_CATALOG, type Equipment } from '../lib/catalog';
 import PriceDialog from './price-dialog';
-import {HalloweenHero,HalloweenOffer} from './halloween-campaign';
-import {halloweenActive,halloweenPickupEligible} from '../lib/halloween-promotion';
-import {useCampaignClock} from './use-campaign-clock';
 import RenterStories from './renter-stories';
 import {CinematicHero,GearJourney,useCinematicMotion} from './cinematic-experience';
 import { BOOKING_STEPS } from '../lib/policies';
@@ -24,8 +21,7 @@ const faq = [
  ['When are my identity documents deleted?', 'Uploaded KYC files are scheduled for deletion seven calendar days after your rental is marked Cleared & Returned. Booking transaction history and contract integrity hashes are retained.'],
  ['When is my security deposit refunded?', 'The full security deposit is due for immediate refund once the return inspection confirms that the equipment and accessories are complete, undamaged, and working properly.'],
 ];
-export default function Storefront({ user,initialNow }: { user: User;initialNow?:number }) {
-  const campaignNow=useCampaignClock(initialNow),seasonal=halloweenActive(campaignNow);
+export default function Storefront({ user }: { user: User }) {
   const motionRoot=useRef<HTMLDivElement>(null),[motionPaused,setMotionPaused]=useState(false),[reducedMotion,setReducedMotion]=useState(false);
   useCinematicMotion(motionRoot,motionPaused||reducedMotion);
   useEffect(()=>{const preference=window.matchMedia('(prefers-reduced-motion: reduce)');const update=()=>setReducedMotion(preference.matches);update();preference.addEventListener('change',update);return()=>preference.removeEventListener('change',update);},[]);
@@ -35,17 +31,16 @@ export default function Storefront({ user,initialNow }: { user: User;initialNow?
   let selectedDays: number | undefined;
   try { selectedDays = validateDates(dates.start, dates.end); } catch {}
   function search(e: FormEvent) { e.preventDefault(); try { validateDates(dates.start, dates.end); setDateError(''); document.querySelector('#gear')?.scrollIntoView({ behavior: 'smooth' }); } catch (e) { setDateError((e as Error).message); } }
-  return <div className={"premium-storefront"+(seasonal?" halloween-storefront":"")} ref={motionRoot} data-motion-paused={motionPaused||reducedMotion}><a className="skip-link" href="#main">Skip to content</a><div className="top-note"><span>{seasonal?"HIRAMSHOT AFTER DARK · HALLOWEEN RENTAL SPECIAL":"BIG MEMORIES. LIGHTER BAGGAGE."}</span><span>{seasonal?"10% OFF · UNTIL NOV 03":"Camera & drone rentals"} <Aperture size={13} aria-hidden="true" /></span></div><Header /><main id="main">
-    {seasonal?<HalloweenHero paused={motionPaused||reducedMotion} reduced={reducedMotion} onToggle={()=>setMotionPaused(value=>!value)}/>:<CinematicHero start={dates.start} end={dates.end} paused={motionPaused||reducedMotion} reduced={reducedMotion} onToggle={()=>setMotionPaused(value=>!value)}/>}
+  return <div className="premium-storefront" ref={motionRoot} data-motion-paused={motionPaused||reducedMotion}><a className="skip-link" href="#main">Skip to content</a><div className="top-note"><span>BIG MEMORIES. LIGHTER BAGGAGE.</span><span>Camera & drone rentals <Aperture size={13} aria-hidden="true" /></span></div><Header /><main id="main">
+    <CinematicHero start={dates.start} end={dates.end} paused={motionPaused||reducedMotion} reduced={reducedMotion} onToggle={()=>setMotionPaused(value=>!value)}/>
     <section className="search-wrap wrap" aria-label="Choose rental dates"><form className="date-search" onSubmit={search}><div className="search-intro"><CalendarDays size={24} aria-hidden="true" /><div><strong>Your next trip?</strong><span>Let’s find your camera.</span></div></div><label className="date-field"><span>Pickup date</span><input type="date" required aria-label="Pickup date" min={todayManila()} value={dates.start} onChange={e => setDates({ ...dates, start: e.target.value })} /></label><label className="date-field"><span>Return date</span><input type="date" required aria-label="Return date" min={dates.start || todayManila()} value={dates.end} onChange={e => setDates({ ...dates, end: e.target.value })} /></label><button className="button" type="submit">Find my gear <ArrowRight size={18} aria-hidden="true" /></button></form>{dateError && <p role="alert" className="error-text">{dateError}</p>}</section>
     <div className="benefits wrap"><span><Camera size={18} aria-hidden="true" /> Actual HiramShot gear</span><span><BatteryCharging size={18} aria-hidden="true" /> Flexible package options</span><span><PackageCheck size={18} aria-hidden="true" /> Personal handover</span><span><ShieldCheck size={18} aria-hidden="true" /> Clear rates before you commit</span></div>
     
-    {seasonal&&<HalloweenOffer catalog={gearList} onPrices={setPricingGearId}/>}
-    <GearJourney promotion={seasonal&&(!dates.start||halloweenPickupEligible(dates.start,campaignNow))} days={selectedDays} start={dates.start} end={dates.end} catalog={gearList} paused={motionPaused||reducedMotion} onPrices={setPricingGearId}/>
+    <GearJourney days={selectedDays} start={dates.start} end={dates.end} catalog={gearList} paused={motionPaused||reducedMotion} onPrices={setPricingGearId}/>
     <section className="story-band" data-reveal><div className="wrap story-inner"><span className="story-icon"><Compass size={36} strokeWidth={1.2} aria-hidden="true" /></span><p>For the <em>“let’s go somewhere”</em><br />and the <em>“I’m glad we did.”</em></p><span>THE TRIP IS YOURS.<br />LET’S GET YOU THE GEAR. <ArrowUpRight size={24} aria-hidden="true" /></span></div></section>
     <section id="how-it-works" className="how-section wrap"><div className="how-intro"><p className="eyebrow">FROM PLANS TO PLAYBACK</p><h2>Five clear steps.<br /><span>One great adventure.</span></h2><p>From choosing your gear to receiving your deposit refund.<br />Know what happens at every step.</p><a href="#gear" className="text-link">Let’s get you started <ArrowRight size={18} aria-hidden="true" /></a></div><ol className="steps">{BOOKING_STEPS.map(([title, description], i) => <li key={title} data-reveal><span className="step-number">0{i+1}</span><div><h3>{title}</h3><p>{description}</p></div><ArrowUpRight size={21} aria-hidden="true" /></li>)}</ol></section>
     <RenterStories/><section className="faq-section wrap" id="faqs"><div><p className="eyebrow">A FEW THINGS BEFORE YOU GO</p><h2>A few questions.<br /><span>Clear answers.</span></h2><p>Less guessing, more planning.</p></div><div className="faq-list">{faq.map(([q, a], i) => <div className="faq-item" key={q}><h3><button aria-expanded={activeFaq === i} aria-controls={`faq-${i}`} onClick={() => setActiveFaq(activeFaq === i ? null : i)}>{q}{activeFaq === i ? <Minus size={19} aria-hidden="true" /> : <Plus size={19} aria-hidden="true" />}</button></h3><div id={`faq-${i}`} hidden={activeFaq !== i}><p>{a}</p></div></div>)}</div></section>
     <section className="closing wrap"><div><p className="eyebrow">YOUR NEXT ADVENTURE IS WAITING</p><h2>Your story. <span>Our gear.</span></h2><p>Make room for the moments you will want to replay.</p></div><a className="button" href="#gear">Find your next camera <ArrowUpRight size={20} aria-hidden="true" /></a></section>
-  </main><Footer />{pricingGearId && gearList.find(g => g.id === pricingGearId) && <PriceDialog campaignActive={seasonal} promotion={seasonal&&(!dates.start||halloweenPickupEligible(dates.start,campaignNow))} equipment={gearList.find(g => g.id === pricingGearId)!} days={selectedDays} start={dates.start} end={dates.end} onClose={() => setPricingGearId(null)} />}</div>;
+  </main><Footer />{pricingGearId && gearList.find(g => g.id === pricingGearId) && <PriceDialog equipment={gearList.find(g => g.id === pricingGearId)!} days={selectedDays} start={dates.start} end={dates.end} onClose={() => setPricingGearId(null)} />}</div>;
 }
 
