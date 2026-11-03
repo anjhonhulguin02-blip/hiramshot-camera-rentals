@@ -3,11 +3,11 @@ import {useEffect,useState} from 'react';
 import {CalendarCheck2,RefreshCw} from 'lucide-react';
 import type {CalendarGear} from '../../lib/availability';
 import {monthDates} from '../../lib/calendar-display';
-import {todayManila} from '../../lib/rental';
+import {todayManila,isDate} from '../../lib/rental';
 import CalendarHeading from '../calendar-heading';
 export default function AvailabilityCalendar({equipment,pickup,returned,onPickup,onAvailability}:{equipment:string[];pickup:string;returned:string;onPickup:(date:string)=>void;onAvailability:(available:boolean|null)=>void}){
- const [month,setMonth]=useState((pickup.slice(0,10)||todayManila()).slice(0,7)),[data,setData]=useState<CalendarGear[]>([]),[error,setError]=useState(''),[busy,setBusy]=useState(false),[refresh,setRefresh]=useState(0),[selected,setSelected]=useState<boolean|null>(null),ids=[...new Set(equipment)].sort().join(',');
- useEffect(()=>{if(/^\d{4}-\d{2}-\d{2}/.test(pickup))setMonth(pickup.slice(0,7));},[pickup.slice(0,10)]);
+ const [month,setMonth]=useState(()=>(isDate(pickup.slice(0,10))?pickup:todayManila()).slice(0,7)),[data,setData]=useState<CalendarGear[]>([]),[error,setError]=useState(''),[busy,setBusy]=useState(false),[refresh,setRefresh]=useState(0),[selected,setSelected]=useState<boolean|null>(null),ids=[...new Set(equipment)].sort().join(',');
+ useEffect(()=>{if(isDate(pickup.slice(0,10)))setMonth(pickup.slice(0,7));},[pickup.slice(0,10)]);
  useEffect(()=>{const focus=()=>setRefresh(n=>n+1);window.addEventListener('focus',focus);return()=>window.removeEventListener('focus',focus);},[]);
  useEffect(()=>{
   const controller=new AbortController();setError('');setData([]);setSelected(null);onAvailability(null);if(!ids){setBusy(false);return;}
