@@ -68,6 +68,7 @@ test('account upload provenance survives transfer and cannot approve an account 
 test('known-client approval is explicit, revision-bound, private and does not fabricate KYC or a video call',async()=>{
  const f=await setup();try{const id=await f.create(),session=await cookie();
   assert.equal((await approve(id,'')).status,403);state.hiramshotTestUser=renter;assert.equal((await approve(id,session)).status,403);state.hiramshotTestUser=admin;
+  for(const invalid of [null,[],true])assert.equal((await exception.POST(request(`/api/admin/bookings/${id}/known-client-approval`,invalid,session),ctx(id))).status,400);
   for(const patch of [{reason:'short'},{relationship:'STRANGER'},{acceptResponsibility:false},{personallyKnown:false},{confirmReference:'wrong'}])assert.equal((await approve(id,session,patch)).status,400);
   assert.equal((await approve(id,session,{reviewVersion:1})).status,409);
   const response=await approve(id,session);assert.equal(response.status,200,await response.clone().text());const row=f.sqlite.prepare('SELECT * FROM bookings WHERE id=?').get(id);assert.equal(row?.status,'verified');assert.equal(row?.verification_basis,'KNOWN_CLIENT_EXCEPTION');assert.equal(row?.live_video_verified_at,null);

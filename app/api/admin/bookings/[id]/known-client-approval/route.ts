@@ -6,6 +6,7 @@ import {audit,decrypt,encrypt,requireAdmin} from '../../../../../../lib/security
 import {validateEmergencyContacts} from '../../../../../../lib/verification';
 export async function POST(request:Request,{params}:{params:Promise<{id:string}>}){try{
  assertSameOrigin(request);const user=await requireAdmin(request),operator=await ensureAccount(user),row=await getBooking((await params).id,user.userId,true) as Awaited<ReturnType<typeof getBooking>>&{kyc_version:number;booking_reference_code?:string},input=await readBody(request),db=database();
+ if(!input||typeof input!=='object'||Array.isArray(input))throw new ApiError(400,'Enter the known-client approval details.');
  if(row.archived_at||row.status!=='verification'||row.verified_at||!row.personal)throw new ApiError(409,'The client must save their verification details before an administrator can approve this pending booking.');
  const version=Number(input.reviewVersion);if(!Number.isSafeInteger(version)||String(input.reviewVersion)!==String(version)||version!==row.kyc_version)throw new ApiError(409,'The booking details changed. Refresh before approving.');
  const decision=knownClientDecision(input,row.booking_reference_code||'HSR-'+row.id.slice(0,8).toUpperCase());
