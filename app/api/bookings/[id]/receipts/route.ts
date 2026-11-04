@@ -6,6 +6,7 @@ import { getBooking } from '../../../../../lib/booking';
 import { applyRequestLimit, audit, verifyTurnstile } from '../../../../../lib/security';
 import { boundedBytes, MAX_FILE, sanitizeUpload } from '../../../../../lib/upload';
 import {scannerConfigured,scanPrivateFile,ScanFailure} from '../../../../../lib/malware-scanner';
+import {uploadLimitLabel} from '../../../../../lib/upload-limits';
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
     if (request.headers.get('origin') !== new URL(request.url).origin || request.headers.get('sec-fetch-site') === 'cross-site') throw new ApiError(403, 'Upload receipts from this website.');
@@ -16,6 +17,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     let bytes; try { bytes = await boundedBytes(request, uploadMaxBytes + 32768); } catch (error) { throw new ApiError(413, (error as Error).message); }
     const body = await new Request(request.url, { method: 'POST', headers: { 'Content-Type': request.headers.get('content-type') || '' }, body: bytes as BodyInit }).formData(), file = body.get('file');
     if (!(file instanceof File)) throw new ApiError(400, 'Choose a payment receipt.');
+    if(file.size>uploadMaxBytes)throw new ApiError(413,`Choose a file no larger than ${uploadLimitLabel(uploadMaxBytes)}.`);
     await verifyTurnstile(request, body.get('turnstileToken'), 'receipt');
     let safe; try { safe = sanitizeUpload(file.name, file.type, new Uint8Array(await file.arrayBuffer())); } catch (error) { throw new ApiError(400, (error as Error).message); }
     try{await scanPrivateFile(safe.bytes,env);}catch(error){if(error instanceof ScanFailure)throw new ApiError(error.status,error.message);throw error;}

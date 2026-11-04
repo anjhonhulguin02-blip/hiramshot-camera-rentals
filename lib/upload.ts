@@ -1,7 +1,8 @@
-export const MAX_FILE=5*1024*1024;
+import {MAX_UPLOAD_BYTES,uploadLimitLabel} from './upload-limits';
+export const MAX_FILE=MAX_UPLOAD_BYTES;
 const decoder=new TextDecoder('latin1');
 export function sanitizeUpload(name:string,mime:string,bytes:Uint8Array){
-  if(!bytes.length||bytes.length>MAX_FILE)throw new Error('Each document must be no larger than 5 MB.');
+  if(!bytes.length||bytes.length>MAX_FILE)throw new Error(`Each document must be no larger than ${uploadLimitLabel(MAX_FILE)}.`);
   const ext=name.toLowerCase().split('.').pop();let expected='';
   if(bytes[0]===255&&bytes[1]===216&&bytes[2]===255)expected='image/jpeg';
   else if(bytes.length>24&&[137,80,78,71,13,10,26,10].every((v,i)=>bytes[i]===v))expected='image/png';

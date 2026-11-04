@@ -52,7 +52,7 @@ The deployed private `MALWARE_SCANNER` service binding passed real ClamAV clean/
 
 Account verification before booking is supported by migration 0009; see [ACCOUNT_VERIFICATION.md](ACCOUNT_VERIFICATION.md). Unlinked requirements expire after seven days; they transfer once to a real booking without duplicating private objects.
 
-The native Cloudflare upload limit remains 5 MB. The optional Vercel adapter advertises 4 MB to remain below that platform's request-body limit. All five distinct clean file kinds, administrator review, live physical-ID verification, emergency contact separation and first-rental pickup/meetup rules remain mandatory.
+The native Cloudflare upload limit remains 10 MB. The optional Vercel adapter advertises 4 MB to remain below that platform's request-body limit. All five distinct clean file kinds, administrator review, live physical-ID verification, emergency contact separation and first-rental pickup/meetup rules remain mandatory.
 
 ## Retention and release
 

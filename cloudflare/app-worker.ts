@@ -7,12 +7,13 @@ import {purgeExpired} from '../lib/purge';
 import {canonicalRequest} from '../lib/trusted-request';
 import {passwordReady} from '../lib/password-settings';
 import {deliverOwnerNotifications,ownerNotificationMutation} from '../lib/owner-notifications';
+import {responseCacheControl} from '../lib/public-assets';
 
 function secure(request:Request,response:Response,env:Cloudflare.Env){
  const result=new Response(response.body,response);result.headers.set('Content-Security-Policy',contentSecurityPolicy(import.meta.env.DEV));result.headers.set('X-Content-Type-Options','nosniff');result.headers.set('X-Frame-Options','DENY');result.headers.set('Referrer-Policy','strict-origin-when-cross-origin');result.headers.set('Permissions-Policy',permissionsPolicy(new URL(request.url).pathname));
  if(!import.meta.env.DEV)result.headers.set('Strict-Transport-Security','max-age=31536000; includeSubDomains');
  if(env.PUBLIC_INDEXING_ENABLED!=='true'||/^\/(?:account|admin|api|book|login|logout|signup|requests)(?:\/|$)/.test(new URL(request.url).pathname))result.headers.set('X-Robots-Tag','noindex, nofollow, noarchive');
- result.headers.set('Cache-Control','private, no-store');return result;
+ result.headers.set('Cache-Control',responseCacheControl(new URL(request.url).pathname,response.status,response.headers.get('Content-Type'),response.headers.has('Set-Cookie')));return result;
 }
 export default {
  async fetch(request:Request,env:Cloudflare.Env,ctx:ExecutionContext){

@@ -41,3 +41,10 @@ test('every remaining requirement stays selectable as receipt progress advances 
  assert.ok(html.match(/<input[^>]*id="capture-file"[^>]*>/)[0].includes('disabled'));
  assert.ok(html.includes('This document was already reviewed'));
 });
+
+test('the requirements form advertises the configured 10 MB cap and respects smaller adapter limits',()=>{
+ for(const size of [10485760,4194304]){
+  const html=renderToStaticMarkup(React.createElement(DocumentCapture,{bookingId:booking.id,scope:'account',docs:[],config:{...config,kycEnabled:true,uploadMaxBytes:size},reload:async()=>{},onBusyChange(){}}));
+  assert.ok(html.includes(`Maximum ${size/1048576} MB per file.`));assert.ok(!html.includes('Maximum 5 MB'));
+ }
+});

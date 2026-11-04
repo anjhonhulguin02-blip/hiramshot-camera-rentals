@@ -1,8 +1,9 @@
 'use client';
 import { useRef, useState, type FormEvent } from 'react';
 import Challenge from './challenge';
+import {MAX_UPLOAD_BYTES} from '../../lib/upload-limits';
 export type PaymentReceipt = { id: string; created_at: string };
-export default function PaymentReceipts({ bookingId, receipts, enabled, siteKey, reload, maxFileBytes=5242880 }: { bookingId: string; receipts: PaymentReceipt[]; enabled: boolean; siteKey: string | null; reload: () => Promise<void>; maxFileBytes?:number }) {
+export default function PaymentReceipts({ bookingId, receipts, enabled, siteKey, reload, maxFileBytes=MAX_UPLOAD_BYTES }: { bookingId: string; receipts: PaymentReceipt[]; enabled: boolean; siteKey: string | null; reload: () => Promise<void>; maxFileBytes?:number }) {
  const [token, setToken] = useState(''), [reset, setReset] = useState(0), [busy, setBusy] = useState(false), [error, setError] = useState('');
  const formRef = useRef<HTMLFormElement>(null);
  async function upload(e: FormEvent<HTMLFormElement>) {

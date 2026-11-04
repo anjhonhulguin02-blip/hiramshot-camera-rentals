@@ -8,7 +8,7 @@ The storefront shows published reviews and their star ratings. **Top picks** cou
 
 ## Photo and video readiness
 
-The upload UI and backend accept up to four JPG/PNG/WebP photos or short MP4 clips per pending review, at most 5 MB each. Attempts share the existing 10-file account/IP rolling-hour quota, and require the `review_upload` Turnstile action. Text reviews use their own quota and `review` challenge. Files are never accepted as KYC documents and cannot point the public media route into the KYC namespace.
+The upload UI and backend accept up to four JPG/PNG/WebP photos or short MP4 clips per pending review, at most 10 MB each. Attempts share the existing 10-file account/IP rolling-hour quota, and require the `review_upload` Turnstile action. Text reviews use their own quota and `review` challenge. Files are never accepted as KYC documents and cannot point the public media route into the KYC namespace.
 
 Media is **disabled** until `REVIEW_MEDIA_ENABLED=true`, a private `REVIEW_MEDIA_PROCESSOR_URL` and `REVIEW_MEDIA_PROCESSOR_TOKEN` are configured, and acceptance checks pass. Do not enable it using a public multi-user malware submission service.
 

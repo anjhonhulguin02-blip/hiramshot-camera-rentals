@@ -1,4 +1,4 @@
 export {env} from 'cloudflare:workers';
 export const platform:string='cloudflare';
 export const isDevelopment=import.meta.env.DEV;
-export const uploadMaxBytes=5*1024*1024;
+export {MAX_UPLOAD_BYTES as uploadMaxBytes} from '../upload-limits';

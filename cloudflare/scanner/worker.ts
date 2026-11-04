@@ -1,4 +1,5 @@
 import {DurableObject} from 'cloudflare:workers';
+import {MAX_UPLOAD_BYTES} from '../../lib/upload-limits';
 type ScannerEnv={SCANNER_INSTANCE:DurableObjectNamespace<ClamScanner>;MALWARE_SCANNER_TOKEN:string};
 export class ClamScanner extends DurableObject<ScannerEnv>{
  async fetch(request:Request){
@@ -12,6 +13,8 @@ export class ClamScanner extends DurableObject<ScannerEnv>{
     await this.ctx.storage.put('lastActivity',Date.now());await this.ctx.storage.setAlarm(Date.now()+300000);
     // Only one fixed Durable Object is selected by the Worker. No caller-controlled instance names.
     if(!container.running){container.start({image,instance:'standard-1',enableInternet:true,env:{SCANNER_TOKEN:this.env.MALWARE_SCANNER_TOKEN}});this.ctx.waitUntil(container.monitor().catch(async()=>{await container.destroy();}));}
+    // An alarm alone does not keep the native VM alive between cold-start retries.
+    await container.setInactivityTimeout(300000);
    });
    return await container.getTcpPort(8080).fetch(request);
   }catch{return Response.json({error:'Scanner warming up or unavailable. Retry in one minute.'},{status:503});}
@@ -39,7 +42,7 @@ export default {async fetch(request:Request,env:ScannerEnv){
   if(path==='/scan'){
    if(request.headers.get('content-type')!=='application/octet-stream')return deny(415,'Expected raw file bytes.');
    const reader=request.body?.getReader();if(!reader)return deny(400,'File required.');const parts:Uint8Array[]=[];let size=0;
-   try{while(true){const value=await reader.read();if(value.done)break;size+=value.value.length;if(size>5*1024*1024)return deny(413,'File too large.');parts.push(value.value);}}finally{await reader.cancel().catch(()=>{});}
+   try{while(true){const value=await reader.read();if(value.done)break;size+=value.value.length;if(size>MAX_UPLOAD_BYTES)return deny(413,'File exceeds 10 MB.');parts.push(value.value);}}finally{await reader.cancel().catch(()=>{});}
    if(!size)return deny(400,'File required.');body=new Uint8Array(size);let offset=0;for(const part of parts){body.set(part,offset);offset+=part.length;}
    headers.set('Content-Type','application/octet-stream');headers.set('Content-Length',String(size));
   }

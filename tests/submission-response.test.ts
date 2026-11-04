@@ -9,7 +9,7 @@ test('verification responses preserve actionable field errors and explicit file-
 test('generic failures, HTML responses and expired sessions produce usable private-form guidance',async()=>{
  for(const body of ['<html>server details</html>',JSON.stringify({error:'Something went wrong. Please try again.'})])await assert.rejects(submissionResponse(new Response(body,{status:500}),fallback),error=>error instanceof Error&&error.message===fallback);
  await assert.rejects(submissionResponse(new Response('',{status:401}),fallback),/sign-in expired/);
- await assert.rejects(submissionResponse(new Response('',{status:413}),fallback),/5 MB/);
+ await assert.rejects(submissionResponse(new Response('',{status:413}),fallback),/10 MB/);
  await assert.rejects(submissionResponse(new Response('',{status:429}),fallback),/Wait/);
 });
 test('an incomplete success must be reconciled rather than silently clearing the selected file',async()=>{

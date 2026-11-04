@@ -1,13 +1,39 @@
 {
-  "$schema":"../../node_modules/wrangler/config-schema.json",
-  "name":"hiramshot-private-scanner",
-  "main":"worker.ts",
-  "account_id":"9df1c2820d183ae678d9f1a7ba7177b1",
-  "compatibility_date":"2026-10-28",
-  "workers_dev":false,
-  "preview_urls":false,
-  "observability":{"enabled":false},
-  "containers":[{"class_name":"ClamScanner","scheduling_policy":"durable_object","images":{"engine":{"image":"registry.cloudflare.com/9df1c2820d183ae678d9f1a7ba7177b1/hiramshot-private-scanner-clamscanner-engine@sha256:005431b193769fd4c297f959804c3b4df17b6080baad1deaff21a66e58bbd990"}}}],
-  "durable_objects":{"bindings":[{"name":"SCANNER_INSTANCE","class_name":"ClamScanner"}]},
-  "migrations":[{"tag":"v1","new_sqlite_classes":["ClamScanner"]}]
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "hiramshot-private-scanner",
+  "main": "worker.ts",
+  "account_id": "9df1c2820d183ae678d9f1a7ba7177b1",
+  "compatibility_date": "2026-10-28",
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": {
+    "enabled": false
+  },
+  "containers": [
+    {
+      "class_name": "ClamScanner",
+      "scheduling_policy": "durable_object",
+      "images": {
+        "engine": {
+          "image": "registry.cloudflare.com/9df1c2820d183ae678d9f1a7ba7177b1/hiramshot-private-scanner-clamscanner-engine@sha256:258482509711a3b21af9301de0f609141b660cef68b143fe87de41d87f11d10b"
+        }
+      }
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "SCANNER_INSTANCE",
+        "class_name": "ClamScanner"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "ClamScanner"
+      ]
+    }
+  ]
 }

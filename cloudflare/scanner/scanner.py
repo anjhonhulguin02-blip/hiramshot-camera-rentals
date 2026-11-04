@@ -11,7 +11,7 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-MAX_FILE = 5 * 1024 * 1024
+MAX_FILE = 10 * 1024 * 1024
 SLOTS = threading.BoundedSemaphore(2)
 
 
@@ -115,7 +115,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.send_json(400, {'error': 'File length required'})
         size = int(lengths[0])
         if not 0 < size <= MAX_FILE:
-            return self.send_json(413, {'error': 'File must be at most 5 MB'})
+            return self.send_json(413, {'error': 'File must be at most 10 MB'})
         if not SLOTS.acquire(blocking=False):
             return self.send_json(503, {'error': 'Scanner busy; try again'})
         payload = bytearray()

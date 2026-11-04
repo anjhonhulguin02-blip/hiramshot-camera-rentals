@@ -10,7 +10,7 @@ Camera permission is allowed only on `/book` and `/account`, requested on a user
 
 ## Storage, review and lifecycle
 
-Migration 0009 adds account_verifications and account_verification_documents. The personal form is encrypted; objects use opaque keys in the existing private R2 bucket. All uploads retain origin checks, registered active identity, action/hostname-bound Turnstile, shared 10-file account/IP rolling quota, 5 MB limit, type/content checks, metadata sanitization, private antivirus, exact-byte SHA-256 and cleanup if the database commit fails. Duplicate content cannot satisfy two document types. No public bucket URLs or user filenames are stored in these records.
+Migration 0009 adds account_verifications and account_verification_documents. The personal form is encrypted; objects use opaque keys in the existing private R2 bucket. All uploads retain origin checks, registered active identity, action/hostname-bound Turnstile, shared 10-file account/IP rolling quota, 10 MB limit, type/content checks, metadata sanitization, private antivirus, exact-byte SHA-256 and cleanup if the database commit fails. Duplicate content cannot satisfy two document types. No public bucket URLs or user filenames are stored in these records.
 
 Administrators open Verification → Account verification uploads. The exact existing private admin allowlist, role and MFA gate apply to the list, form details, image viewer, five-minute signed downloads, replacement and approval. Approval requires five clean distinct files, both document-review and completed live-call acknowledgements, a current version and an active client. Database triggers enforce the five reviewed slots and live-review metadata. Replacing a file resets approval and stale versions cannot be approved.
 

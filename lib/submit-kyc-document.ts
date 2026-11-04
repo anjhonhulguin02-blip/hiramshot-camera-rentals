@@ -6,12 +6,14 @@ import {applyRequestLimit,audit,verifyTurnstile} from './security';
 import {FILE_UPLOAD_LIMIT} from './request-limits';
 import {boundedBytes,sanitizeUpload} from './upload';
 import {scanPrivateFile,ScanFailure} from './malware-scanner';
+import {uploadLimitLabel} from './upload-limits';
 type Scope={type:'booking';id:string}|{type:'account';id:string;version:number};
 export async function submitKycDocument(request:Request,principal:string,scope:Scope){
  await applyRequestLimit(request,principal,FILE_UPLOAD_LIMIT);
  let raw;try{raw=await boundedBytes(request,uploadMaxBytes+32768);}catch(error){throw new ApiError(413,(error as Error).message);}
  let body:FormData;try{body=await new Request(request.url,{method:'POST',headers:{'Content-Type':request.headers.get('content-type')||''},body:raw as BodyInit}).formData();}catch{throw new ApiError(400,'Choose a photo or document to submit.');}
  const kind=body.get('kind'),file=body.get('file');if(!DOCUMENT_KINDS.includes(kind as typeof DOCUMENT_KINDS[number])||!(file instanceof File))throw new ApiError(400,'Choose a valid requirement and photo.');
+ if(file.size>uploadMaxBytes)throw new ApiError(413,`Choose a file no larger than ${uploadLimitLabel(uploadMaxBytes)}.`);
  await verifyTurnstile(request,body.get('turnstileToken'),'upload');
  let metadata,safe;try{metadata=captureMetadata(String(kind),body.get('idType'),body.get('captureSource'));safe=sanitizeUpload(file.name,file.type,new Uint8Array(await file.arrayBuffer()));validateIdentityPhoto(String(kind),safe.bytes,safe.mime);}catch(error){throw new ApiError(400,(error as Error).message);}
  const db=database(),table=scope.type==='booking'?'kyc_documents':'account_verification_documents',parent=scope.type==='booking'?'booking_id':'verification_id';

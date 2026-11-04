@@ -36,8 +36,8 @@ function request(path:string,body:unknown,method='PATCH',cookie=''){return new R
 function ctx(id:string){return {params:Promise.resolve({id})};}
 async function cookie(){const payload=base64(new TextEncoder().encode(JSON.stringify({uid:people.admin.userId,exp:Date.now()+60000})));return '__Host-hiramshot-admin='+encodeURIComponent(payload+'~'+await mac(payload,env.ADMIN_SESSION_SECRET));}
 async function save(){return client.PATCH(request('/api/account/verification',{action:'personal',personal,sensitiveConsent:true,turnstileToken:'synthetic-verification'}));}
-async function send(kind:string,index:number,token='synthetic-upload',options:{idType?:string;captureSource?:string;width?:number;height?:number;bookingId?:string}={}){
- const body=new FormData();body.set('kind',kind);body.set('idType',options.idType??({'government-id-1':'drivers-license','government-id-2':'national-id','company-school-id':'school-id'}[kind]||''));body.set('captureSource',options.captureSource??'camera');body.set('file',new File([png(index,options.width,options.height)],'synthetic.png',{type:'image/png'}));body.set('turnstileToken',token);
+async function send(kind:string,index:number,token='synthetic-upload',options:{idType?:string;captureSource?:string;width?:number;height?:number;bookingId?:string;bytes?:Uint8Array;name?:string;mime?:string}={}){
+ const body=new FormData();body.set('kind',kind);body.set('idType',options.idType??({'government-id-1':'drivers-license','government-id-2':'national-id','company-school-id':'school-id'}[kind]||''));body.set('captureSource',options.captureSource??'camera');body.set('file',new File([options.bytes??png(index,options.width,options.height)],options.name??'synthetic.png',{type:options.mime??'image/png'}));body.set('turnstileToken',token);
  const path=options.bookingId?'/api/bookings/'+options.bookingId+'/documents':'/api/account/verification/documents',req=new Request(origin+path,{method:'POST',headers:{Origin:origin},body});return options.bookingId?bookingUpload.POST(req,ctx(options.bookingId)):upload.POST(req);
 }
 function booking(sqlite:DatabaseSync,userId:string,id=crypto.randomUUID()){
@@ -55,6 +55,19 @@ test('pre-booking requirements enforce scoped uploads, review, transfer and rete
    assert.equal((await send(DOCUMENT_KINDS[1],1)).status,409);assert.equal(f.objects.size,1);
    assert.throws(()=>f.sqlite.prepare("UPDATE account_verifications SET status='APPROVED',verified_at='test',reviewed_by='admin'").run(),/Five reviewed documents/);
    state.hiramshotTestUser=people.other;assert.equal((await client.GET()).status,200);assert.equal((await (await client.GET()).json() as any).verification,null);assert.equal((await send(DOCUMENT_KINDS[1],2)).status,409);f.sqlite.close();
+  });
+  await t.test('10 MB billing files commit for both scopes while larger files and metadata remain rejected',async()=>{
+   for(const scope of ['account','booking']){
+    const f=fixture();await save();const options=scope==='booking'?{bookingId:booking(f.sqlite,people.renter.userId)}:{};if(options.bookingId)f.sqlite.prepare("UPDATE bookings SET personal='synthetic-personal' WHERE id=?").run(options.bookingId);
+    const objects=['1 0 obj<< /Type /Catalog /Pages 2 0 R >>endobj\n','2 0 obj<< /Type /Pages /Kids [3 0 R] /Count 1 >>endobj\n','3 0 obj<< /Type /Page /Parent 2 0 R /MediaBox [0 0 100 100] >>endobj\n'];
+    let prefix='%PDF-1.7\n',offsets=[0];for(const object of objects){offsets.push(prefix.length);prefix+=object;}prefix+='% Synthetic size-boundary fixture only\n%';
+    function pdf(padding:number){const xrefOffset=prefix.length+padding+1;return new TextEncoder().encode(prefix+' '.repeat(padding)+'\nxref\n0 4\n0000000000 65535 f \n'+offsets.slice(1).map(offset=>String(offset).padStart(10,'0')+' 00000 n \n').join('')+'trailer<< /Size 4 /Root 1 0 R >>\nstartxref\n'+xrefOffset+'\n%%EOF');}
+    let padding=10485760-1024,bytes=pdf(padding);while(bytes.length!==10485760){padding+=10485760-bytes.length;bytes=pdf(padding);}
+    const received=await send('proof-of-billing',1,'synthetic-upload',{...options,bytes,name:'synthetic.pdf',mime:'application/pdf'});assert.equal(received.status,201);
+    const table=scope==='booking'?'kyc_documents':'account_verification_documents',row=f.sqlite.prepare('SELECT id,size FROM '+table).get();assert.equal(row?.size,10485760);assert.equal(f.objects.size,1);
+    assert.throws(()=>f.sqlite.prepare('UPDATE '+table+' SET size=10485761 WHERE id=?').run(row?.id),/10 MB/);
+    const oversized=await send('proof-of-billing',2,'synthetic-upload',{...options,bytes:new Uint8Array(10485761),name:'synthetic.pdf',mime:'application/pdf'});assert.equal(oversized.status,413);assert.equal(f.objects.size,1);f.sqlite.close();
+   }
   });
   await t.test('ID type, distinct government IDs and minimum photo size are enforced on the server',async()=>{
    const f=fixture();await save();
