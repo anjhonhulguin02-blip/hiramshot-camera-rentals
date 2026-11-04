@@ -3,12 +3,29 @@ import assert from 'node:assert/strict';
 import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import KycReview from '../app/admin/kyc-review.tsx';
+import AdminRequirementUpload from '../app/admin/requirement-upload.tsx';
 import Registration from '../app/signup/registration.tsx';
 import Wizard from '../app/book/wizard.tsx';
 import {DOCUMENT_KINDS,VIDEO_REVIEW_ACKNOWLEDGEMENT} from '../lib/verification.ts';
 import {INITIAL_CATALOG} from '../lib/catalog.ts';
 
 const render=(component,props)=>renderToStaticMarkup(React.createElement(component,props));
+test('administrator uploads expose private client consent and known-client decisions are a separate explicit option',()=>{
+ const upload=render(AdminRequirementUpload,{scope:'booking',id:'synthetic',documents:[],onUploaded:async()=>{}});
+ assert.ok(upload.includes('Messenger'));
+ assert.ok(upload.includes('Maximum 10 MB'));
+ assert.ok(upload.includes('type="file" required=""'));
+ assert.ok(upload.includes('authorized HiramShot'));
+ const standard=render(KycReview,{documents:[],busy:false,version:2,onApprove:async()=>false});
+ assert.ok(!standard.includes('Approve this known-client booking'));
+ const exceptional=render(KycReview,{documents:[],busy:false,version:2,bookingReference:'HSR-SYNTHETIC',onApprove:async()=>false,onKnownClient:async()=>false});
+ assert.ok(exceptional.includes('Approve this known-client booking'));
+ assert.ok(exceptional.includes('this booking only'));
+ for(const name of ['relationship','reason','personallyKnown','acceptResponsibility','confirmReference']){
+  const control=exceptional.match(new RegExp('<(?:input|select|textarea)[^>]*name="'+name+'"[^>]*>'))?.[0];
+  assert.ok(control?.includes('required=""'),name);
+ }
+});
 test('approval dialog requires all five clean files and both review acknowledgements',()=>{
  const documents=DOCUMENT_KINDS.map((kind,i)=>({id:String(i),kind,deleted_at:null,scan_status:'CLEAN',sha256:String(i).repeat(64),id_type:i===0?'drivers-license':i===1?'national-id':null}));
  const html=render(KycReview,{documents,busy:false,version:7,onApprove:async()=>true});
